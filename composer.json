@@ -16,7 +16,7 @@
     },
     "autoload": {
         "psr-4": {
-            "EasySwoole\\AbstractInterface\\": "src/"
+            "EasySwoole\\Component\\": "src/"
         }
     }
 }
