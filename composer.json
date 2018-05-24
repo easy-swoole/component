@@ -1,5 +1,5 @@
 {
-    "name": "easyswoole/abstract-interface",
+    "name": "easyswoole/component",
     "type": "library",
     "description": "An efficient swoole framework",
     "keywords" : ["swoole", "framework", "async","easyswoole"],

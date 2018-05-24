@@ -6,7 +6,7 @@
  * Time: 下午3:56
  */
 
-namespace EasySwoole\AbstractInterface;
+namespace EasySwoole\Component;
 
 
 trait Singleton
