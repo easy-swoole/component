@@ -11,17 +11,8 @@ namespace EasySwoole\Component;
 
 use EasySwoole\Trigger\Trigger;
 
-class Event extends MultiContainer
+class Event extends Container
 {
-    function add($key, $item)
-    {
-        if(is_callable($item)){
-            return parent::add($key, $item);
-        }else{
-            return false;
-        }
-    }
-
     function set($key, $item)
     {
         if(is_callable($item)){
@@ -33,15 +24,16 @@ class Event extends MultiContainer
 
     public function hook($event,...$args)
     {
-        $calls = $this->get($event);
-        if(is_array($calls)){
-            foreach ($calls as $call){
-                try{
-                    Invoker::callUserFunc($call,...$args);
-                }catch (\Throwable $throwable){
-                    Trigger::throwable($throwable);
-                }
+        $call = $this->get($event);
+        if(is_callable($call)){
+            try{
+                return Invoker::callUserFunc($call,...$args);
+            }catch (\Throwable $throwable){
+                Trigger::throwable($throwable);
+                return null;
             }
+        }else{
+            return null;
         }
     }
 }
