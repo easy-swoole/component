@@ -13,11 +13,12 @@
     ],
     "require": {
         "php": ">=7.1.0",
-        "easyswoole/trigger": "^1.0"
+        "easyswoole/trigger": "dev-master"
     },
     "autoload": {
         "psr-4": {
             "EasySwoole\\Component\\": "src/"
         }
-    }
+    },
+    "minimum-stability":"dev"
 }
