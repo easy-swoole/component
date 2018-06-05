@@ -35,7 +35,7 @@ class Invoker
 
     public static function callUserFunc(callable $callable,...$params)
     {
-        if(SWOOLE_VERSION >1){
+        if(intval(swoole_version()) >1){
             if($callable instanceof \Closure){
                 return $callable(...$params);
             }else if(is_array($callable) && is_object($callable[0])){
@@ -58,7 +58,7 @@ class Invoker
 
     public static function callUserFuncArray(callable $callable,array $params)
     {
-        if(SWOOLE_VERSION > 1){
+        if(intval(swoole_version()) > 1){
             if($callable instanceof \Closure){
                 return $callable(...$params);
             }else if(is_array($callable) && is_object($callable[0])){
