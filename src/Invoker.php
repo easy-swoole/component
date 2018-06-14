@@ -35,7 +35,10 @@ class Invoker
 
     public static function callUserFunc(callable $callable,...$params)
     {
-        if(intval(swoole_version()) >1){
+        /*
+         * 目前仅有swoole 2.x的call 需要特殊处理
+         */
+        if(intval(swoole_version()) == 2){
             if($callable instanceof \Closure){
                 return $callable(...$params);
             }else if(is_array($callable) && is_object($callable[0])){
@@ -58,7 +61,10 @@ class Invoker
 
     public static function callUserFuncArray(callable $callable,array $params)
     {
-        if(intval(swoole_version()) > 1){
+        /*
+         * 目前仅有swoole 2.x的call 需要特殊处理
+         */
+        if(intval(swoole_version()) == 2){
             if($callable instanceof \Closure){
                 return $callable(...$params);
             }else if(is_array($callable) && is_object($callable[0])){
