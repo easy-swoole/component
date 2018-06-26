@@ -19,7 +19,7 @@ abstract class AbstractPool
     protected $queue;
     protected $max = 10;
     protected $createdNum = 0;
-    protected $waitList = [];
+    protected $waitList;
 
     /*
      * 如果成功创建了,请调用recycleObj 将创建成功的对象放置到队列中
@@ -29,6 +29,7 @@ abstract class AbstractPool
     public function __construct()
     {
         $this->queue = new \SplQueue();
+        $this->waitList = new \SplQueue();
     }
 
     /*
@@ -41,9 +42,8 @@ abstract class AbstractPool
                 $obj->objectRestore();
             }
             $this->queue->enqueue($obj);
-            $cid = array_shift($this->waitList);
-            if($cid){
-                co::resume($cid);
+            if(!$this->waitList->isEmpty()){
+                co::resume($this->waitList->dequeue());
             }
             return true;
         }else{
@@ -58,7 +58,7 @@ abstract class AbstractPool
             if($this->createdNum < $this->max){
                 $this->createdNum++;
                 if($this->createObject()){
-                    return $this->queue->pop();
+                    return $this->queue->dequeue();
                 }else{
                     $this->createdNum--;
                 }
@@ -68,11 +68,11 @@ abstract class AbstractPool
                 return null;
             }
             $cid = co::getUid();
-            array_push($this->waitList,$cid);
+            $this->waitList->enqueue($cid);
             co::suspend();
-            return $this->queue->pop();
+            return $this->queue->dequeue();
         }else{
-            return $this->queue->pop();
+            return $this->queue->dequeue();
         }
     }
 
