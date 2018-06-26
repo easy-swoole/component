@@ -75,4 +75,17 @@ abstract class AbstractPool
             return $this->queue->pop();
         }
     }
+
+    public function unsetObj($obj):bool
+    {
+        if(is_object($obj)){
+            if($obj instanceof AbstractObject){
+                $obj->objectRestore();
+            }
+            unset($obj);
+            return true;
+        }else{
+            return false;
+        }
+    }
 }
