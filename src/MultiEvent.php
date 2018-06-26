@@ -31,13 +31,13 @@ class MultiEvent extends MultiContainer
         }
     }
 
-    public function hook($event,...$args)
+    public function hook($event,...$args):array
     {
         $res = [];
         $calls = $this->get($event);
         foreach ($calls as $key => $call){
             try{
-                $res[$key] =  Invoker::callUserFunc($call,...$args);
+                $res[$key] =  call_user_func($call,...$args);
             }catch (\Throwable $throwable){
                 Trigger::throwable($throwable);
                 $res[$key] = null;

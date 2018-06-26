@@ -7,6 +7,7 @@
  */
 
 namespace EasySwoole\Component;
+use EasySwoole\Trigger\Trigger;
 
 
 class Di
@@ -16,9 +17,6 @@ class Di
 
     public function set($key, $obj,...$arg):void
     {
-        if(count($arg) == 1 && is_array($arg[0])){
-            $arg = $arg[0];
-        }
         /*
          * 注入的时候不做任何的类型检测与转换
          * 由于编程人员为问题，该注入资源并不一定会被用到
@@ -48,10 +46,15 @@ class Di
             }else if(is_callable($result['obj'])){
                 return $this->container[$key]['obj'];
             }else if(is_string($result['obj']) && class_exists($result['obj'])){
-                $reflection = new \ReflectionClass ( $result['obj'] );
-                $ins =  $reflection->newInstanceArgs ( $result['params'] );
-                $this->container[$key]['obj'] = $ins;
-                return $this->container[$key]['obj'];
+                try{
+                    $params = $result['params'];
+                    $class = $result['obj'];
+                    $this->container[$key]['obj'] = new $class(...$params);
+                    return $this->container[$key]['obj'];
+                }catch (\Throwable $throwable){
+                    Trigger::throwable($throwable);
+                    return null;
+                }
             }else{
                 return $result['obj'];
             }

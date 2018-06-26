@@ -27,7 +27,7 @@ class Event extends Container
         $call = $this->get($event);
         if(is_callable($call)){
             try{
-                return Invoker::callUserFunc($call,...$args);
+                return call_user_func($call,...$args);
             }catch (\Throwable $throwable){
                 Trigger::throwable($throwable);
                 return null;
