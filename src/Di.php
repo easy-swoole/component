@@ -40,23 +40,20 @@ class Di
     function get($key)
     {
         if(isset($this->container[$key])){
-            $result = $this->container[$key];
-            if(is_object($result['obj'])){
-                return $result['obj'];
-            }else if(is_callable($result['obj'])){
-                return $this->container[$key]['obj'];
-            }else if(is_string($result['obj']) && class_exists($result['obj'])){
+            $obj = $this->container[$key]['obj'];
+            $params = $this->container[$key]['params'];
+            if(is_object($obj) || is_callable($obj)){
+                return $obj;
+            }else if(is_string($obj) && class_exists($obj)){
                 try{
-                    $params = $result['params'];
-                    $class = $result['obj'];
-                    $this->container[$key]['obj'] = new $class(...$params);
+                    $this->container[$key]['obj'] = new $obj(...$params);
                     return $this->container[$key]['obj'];
                 }catch (\Throwable $throwable){
                     Trigger::throwable($throwable);
                     return null;
                 }
             }else{
-                return $result['obj'];
+                return $obj;
             }
         }else{
             return null;
