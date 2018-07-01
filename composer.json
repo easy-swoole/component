@@ -1,7 +1,7 @@
 {
     "name": "easyswoole/component",
     "type": "library",
-    "description": "An efficient swoole framework",
+    "description": "easyswoole component",
     "keywords" : ["swoole", "framework", "async","easyswoole"],
     "homepage" : "https://www.easyswoole.com/",
     "license" : "Apache-2.0",
