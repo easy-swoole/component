@@ -35,12 +35,14 @@ class MultiEvent extends MultiContainer
     {
         $res = [];
         $calls = $this->get($event);
-        foreach ($calls as $key => $call){
-            try{
-                $res[$key] =  call_user_func($call,...$args);
-            }catch (\Throwable $throwable){
-                Trigger::throwable($throwable);
-                $res[$key] = null;
+        if(is_array($calls)){
+            foreach ($calls as $key => $call){
+                try{
+                    $res[$key] =  call_user_func($call,...$args);
+                }catch (\Throwable $throwable){
+                    Trigger::throwable($throwable);
+                    $res[$key] = null;
+                }
             }
         }
         return $res;
