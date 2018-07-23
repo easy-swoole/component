@@ -10,26 +10,26 @@ namespace EasySwoole\Component\Pool;
 
 
 use EasySwoole\Component\Singleton;
-use Swoole\Coroutine as co;
+use Swoole\Coroutine\Channel;
 
 abstract class AbstractPool
 {
     use Singleton;
 
-    protected $queue;
+    private $queue;
     protected $max = 10;
-    protected $createdNum = 0;
-    protected $waitList;
+    private $createdNum = 0;
+    private $chan;
 
     /*
-     * 如果成功创建了,请调用recycleObj 将创建成功的对象放置到队列中
+     * 如果成功创建了,请返回对应的obj
      */
-    abstract protected function createObject():bool ;
+    abstract protected function createObject() ;
 
     public function __construct()
     {
         $this->queue = new \SplQueue();
-        $this->waitList = new \SplQueue();
+        $this->chan = new Channel();
     }
 
     /*
@@ -42,35 +42,39 @@ abstract class AbstractPool
                 $obj->objectRestore();
             }
             $this->queue->enqueue($obj);
-            if(!$this->waitList->isEmpty()){
-                co::resume($this->waitList->dequeue());
-            }
+            $this->chan->push(1);
             return true;
         }else{
             return false;
         }
     }
 
-    public function getObj($waitSchedule = true)
+    public function getObj(float $timeout = 0.1)
     {
         //懒惰创建模式
         if($this->queue->isEmpty()){
             if($this->createdNum < $this->max){
                 $this->createdNum++;
-                if($this->createObject()){
-                    return $this->queue->dequeue();
+                $obj = $this->createObject();
+                if(is_object($obj)){
+                    return $obj;
                 }else{
                     $this->createdNum--;
                 }
             }
-            //进入调度
-            if($waitSchedule !== false){
-                return null;
+            while (true){
+                /*
+                 * 如果上一个任务超时，没有pop成功，而归还任务的时候，会导致chan数据不为空，但队列无数据。
+                 */
+                $res = $this->chan->pop($timeout);
+                if($res > 0){
+                    if(!$this->queue->isEmpty()){
+                        return $this->queue->dequeue();
+                    }
+                }else{
+                    return null;
+                }
             }
-            $cid = co::getUid();
-            $this->waitList->enqueue($cid);
-            co::suspend();
-            return $this->queue->dequeue();
         }else{
             return $this->queue->dequeue();
         }
