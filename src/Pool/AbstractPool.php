@@ -9,15 +9,12 @@
 namespace EasySwoole\Component\Pool;
 
 
-use EasySwoole\Component\Singleton;
 use Swoole\Coroutine\Channel;
 
 abstract class AbstractPool
 {
-    use Singleton;
-
     private $queue;
-    protected $max = 10;
+    protected $max;
     private $createdNum = 0;
     private $chan;
 
@@ -26,10 +23,11 @@ abstract class AbstractPool
      */
     abstract protected function createObject() ;
 
-    public function __construct()
+    public function __construct($maxNum = 10)
     {
         $this->queue = new \SplQueue();
         $this->chan = new Channel();
+        $this->max = $maxNum;
     }
 
     /*
@@ -65,6 +63,7 @@ abstract class AbstractPool
             while (true){
                 /*
                  * 如果上一个任务超时，没有pop成功，而归还任务的时候，会导致chan数据不为空，但队列无数据。
+                 * 仅仅利用channel用于通知超时调度
                  */
                 $res = $this->chan->pop($timeout);
                 if($res > 0){
@@ -76,6 +75,8 @@ abstract class AbstractPool
                 }
             }
         }else{
+            //队列不为空，说明有出现recycle，recycle的时候，有push，请务必pop清除
+            $this->chan->pop($timeout);
             return $this->queue->dequeue();
         }
     }
