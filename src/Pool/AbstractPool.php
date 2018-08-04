@@ -36,7 +36,7 @@ abstract class AbstractPool
     public function recycleObj($obj):bool
     {
         if(is_object($obj)){
-            if($obj instanceof AbstractObject){
+            if($obj instanceof PoolObjectInterface){
                 $obj->objectRestore();
             }
             $this->queue->enqueue($obj);
@@ -84,8 +84,9 @@ abstract class AbstractPool
     public function unsetObj($obj):bool
     {
         if(is_object($obj)){
-            if($obj instanceof AbstractObject){
+            if($obj instanceof PoolObjectInterface){
                 $obj->objectRestore();
+                $obj->gc();
             }
             unset($obj);
             return true;
