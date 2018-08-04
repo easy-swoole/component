@@ -17,6 +17,7 @@ abstract class AbstractPool
     protected $max;
     private $createdNum = 0;
     private $chan;
+    private $objHash = [];
 
     /*
      * 如果成功创建了,请返回对应的obj
@@ -31,17 +32,25 @@ abstract class AbstractPool
     }
 
     /*
-     * 回收一个连接
+     * 回收一个对象
      */
     public function recycleObj($obj):bool
     {
         if(is_object($obj)){
-            if($obj instanceof PoolObjectInterface){
-                $obj->objectRestore();
+            //防止一个对象被重复入队列。
+            $key = spl_object_hash($obj);
+            if(isset($this->objHash[$key])){
+                //标记这个对象已经入队列了
+                unset($this->objHash[$key]);
+                if($obj instanceof PoolObjectInterface){
+                    $obj->objectRestore();
+                }
+                $this->queue->enqueue($obj);
+                $this->chan->push(1);
+                return true;
+            }else{
+                return false;
             }
-            $this->queue->enqueue($obj);
-            $this->chan->push(1);
-            return true;
         }else{
             return false;
         }
@@ -55,6 +64,9 @@ abstract class AbstractPool
                 $this->createdNum++;
                 $obj = $this->createObject();
                 if(is_object($obj)){
+                    $key = spl_object_hash($obj);
+                    //标记这个对象已经出队列了
+                    $this->objHash[$key] = true;
                     return $obj;
                 }else{
                     $this->createdNum--;
@@ -68,7 +80,11 @@ abstract class AbstractPool
                 $res = $this->chan->pop($timeout);
                 if($res > 0){
                     if(!$this->queue->isEmpty()){
-                        return $this->queue->dequeue();
+                        $obj =  $this->queue->dequeue();
+                        $key = spl_object_hash($obj);
+                        //标记这个对象已经出队列了
+                        $this->objHash[$key] = true;
+                        return $obj;
                     }
                 }else{
                     return null;
@@ -77,7 +93,11 @@ abstract class AbstractPool
         }else{
             //队列不为空，说明有出现recycle，recycle的时候，有push，请务必pop清除
             $this->chan->pop($timeout);
-            return $this->queue->dequeue();
+            $obj = $this->queue->dequeue();
+            //标记这个对象已经出队列了
+            $key = spl_object_hash($obj);
+            $this->objHash[$key] = true;
+            return $obj;
         }
     }
 
