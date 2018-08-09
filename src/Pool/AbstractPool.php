@@ -27,7 +27,7 @@ abstract class AbstractPool
     public function __construct($maxNum = 10)
     {
         $this->queue = new \SplQueue();
-        $this->chan = new Channel();
+        $this->chan = new Channel(128);
         $this->max = $maxNum;
     }
 
@@ -67,6 +67,10 @@ abstract class AbstractPool
                     $key = spl_object_hash($obj);
                     //标记这个对象已经出队列了
                     $this->objHash[$key] = true;
+                    //清空channel
+                    while (!$this->queue->isEmpty()){
+                        $this->queue->pop(0.00001);
+                    }
                     return $obj;
                 }else{
                     $this->createdNum--;
