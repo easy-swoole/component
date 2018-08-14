@@ -31,18 +31,19 @@ class MultiEvent extends MultiContainer
         }
     }
 
-    public function hook($event,...$args):array
+    /**
+     * @param $event
+     * @param mixed ...$args
+     * @return array
+     * @throws \Throwable
+     */
+    public function hook($event, ...$args):array
     {
         $res = [];
         $calls = $this->get($event);
         if(is_array($calls)){
             foreach ($calls as $key => $call){
-                try{
-                    $res[$key] =  call_user_func($call,...$args);
-                }catch (\Throwable $throwable){
-                    Trigger::throwable($throwable);
-                    $res[$key] = null;
-                }
+                $res[$key] =  call_user_func($call,...$args);
             }
         }
         return $res;

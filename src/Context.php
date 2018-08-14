@@ -7,7 +7,6 @@
  */
 
 namespace EasySwoole\Component;
-use EasySwoole\Trigger\Trigger;
 use Swoole\Coroutine as Co;
 
 class Context
@@ -23,7 +22,13 @@ class Context
         return $this;
     }
 
-    function get(string $name,$cid = null)
+    /**
+     * @param string $name
+     * @param null $cid
+     * @return mixed|null
+     * @throws \Throwable
+     */
+    function get(string $name, $cid = null)
     {
         if($cid === null){
             $cid = Co::getUid();
@@ -33,14 +38,9 @@ class Context
         }else{
             if(isset($this->register[$name])){
                 $call = $this->register[$name];
-                try{
-                    $res = call_user_func($call);
-                    $this->context[$cid][$name] = $res;
-                    return $res;
-                }catch (\Throwable $throwable){
-                    Trigger::throwable($throwable);
-                    return null;
-                }
+                $res = call_user_func($call);
+                $this->context[$cid][$name] = $res;
+                return $res;
             }else{
                 return null;
             }

@@ -7,7 +7,6 @@
  */
 
 namespace EasySwoole\Component;
-use EasySwoole\Trigger\Trigger;
 
 
 class Di
@@ -37,6 +36,11 @@ class Di
         $this->container = array();
     }
 
+    /**
+     * @param $key
+     * @return null
+     * @throws \Throwable
+     */
     function get($key)
     {
         if(isset($this->container[$key])){
@@ -49,8 +53,7 @@ class Di
                     $this->container[$key]['obj'] = new $obj(...$params);
                     return $this->container[$key]['obj'];
                 }catch (\Throwable $throwable){
-                    Trigger::throwable($throwable);
-                    return null;
+                    throw $throwable;
                 }
             }else{
                 return $obj;

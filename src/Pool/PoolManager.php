@@ -10,7 +10,6 @@ namespace EasySwoole\Component\Pool;
 
 
 use EasySwoole\Component\Singleton;
-use EasySwoole\Trigger\Trigger;
 
 class PoolManager
 {
@@ -18,18 +17,21 @@ class PoolManager
 
     private $pool = [];
 
-    function register(string $className,$maxNum = 20):bool
+    /**
+     * @param string $className
+     * @param int $maxNum
+     * @return bool
+     * @throws \Throwable
+     */
+    function register(string $className, $maxNum = 20):bool
     {
-        try{
-            $ref = new \ReflectionClass($className);
-            if($ref->isSubclassOf(AbstractPool::class)){
-                $this->pool[$this->generateKey($className)] = new $className($maxNum);
-                return true;
-            }
-        }catch (\Throwable $throwable){
-            Trigger::throwable($throwable);
+        $ref = new \ReflectionClass($className);
+        if($ref->isSubclassOf(AbstractPool::class)){
+            $this->pool[$this->generateKey($className)] = new $className($maxNum);
+            return true;
+        }else{
+            return false;
         }
-        return false;
     }
 
     function getPool(string $className):?AbstractPool

@@ -8,9 +8,6 @@
 
 namespace EasySwoole\Component;
 
-
-use EasySwoole\Trigger\Trigger;
-
 class Event extends Container
 {
     function set($key, $item)
@@ -22,16 +19,17 @@ class Event extends Container
         }
     }
 
-    public function hook($event,...$args)
+    /**
+     * @param $event
+     * @param mixed ...$args
+     * @return mixed|null
+     * @throws \Throwable
+     */
+    public function hook($event, ...$args)
     {
         $call = $this->get($event);
         if(is_callable($call)){
-            try{
-                return call_user_func($call,...$args);
-            }catch (\Throwable $throwable){
-                Trigger::throwable($throwable);
-                return null;
-            }
+            return call_user_func($call,...$args);
         }else{
             return null;
         }
