@@ -45,6 +45,7 @@ abstract class AbstractPool
                 if($obj instanceof PoolObjectInterface){
                     $obj->objectRestore();
                 }
+                $obj->last_recycle_time = time();
                 $this->queue->enqueue($obj);
                 $this->chan->push(1);
                 return true;
@@ -71,6 +72,7 @@ abstract class AbstractPool
                     while (!$this->queue->isEmpty()){
                         $this->queue->pop(0.00001);
                     }
+                    $obj->last_use_time = time();
                     return $obj;
                 }else{
                     $this->createdNum--;
@@ -88,6 +90,7 @@ abstract class AbstractPool
                         $key = spl_object_hash($obj);
                         //标记这个对象已经出队列了
                         $this->objHash[$key] = true;
+                        $obj->last_use_time = time();
                         return $obj;
                     }
                 }else{
@@ -101,6 +104,7 @@ abstract class AbstractPool
             //标记这个对象已经出队列了
             $key = spl_object_hash($obj);
             $this->objHash[$key] = true;
+            $obj->last_use_time = time();
             return $obj;
         }
     }
@@ -108,14 +112,43 @@ abstract class AbstractPool
     public function unsetObj($obj):bool
     {
         if(is_object($obj)){
+            $key = spl_object_hash($obj);
             if($obj instanceof PoolObjectInterface){
                 $obj->objectRestore();
                 $obj->gc();
             }
+            if(isset($this->objHash[$key])){
+                unset($this->objHash[$key]);
+            }
             unset($obj);
+            $this->createdNum--;
             return true;
         }else{
             return false;
         }
     }
+
+    /*
+     * 超过$idleTime未出队使用的，将会被回收。
+     */
+    public function gcObject(int $idleTime)
+    {
+        $list = [];
+        while (true){
+            if(!$this->queue->isEmpty()){
+                $obj = $this->queue->pop();
+                if($obj->last_recycle_time - $obj->last_use_time > $idleTime){
+                    $this->unsetObj($obj);
+                }else{
+                    array_push($list,$obj);
+                }
+            }else{
+                break;
+            }
+        }
+        foreach ($list as $item){
+            $this->queue->push($item);
+        }
+    }
+
 }
