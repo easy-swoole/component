@@ -70,7 +70,7 @@ abstract class AbstractPool
                     $this->objHash[$key] = true;
                     //清空channel
                     while (!$this->queue->isEmpty()){
-                        $this->queue->pop(0.00001);
+                        $this->queue->pop();
                     }
                     $obj->last_use_time = time();
                     return $obj;
