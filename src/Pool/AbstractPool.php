@@ -13,8 +13,7 @@ use Swoole\Coroutine\Channel;
 
 abstract class AbstractPool
 {
-    private $queue;
-    protected $max;
+    private $max;
     private $createdNum = 0;
     private $chan;
     private $objHash = [];
@@ -26,8 +25,7 @@ abstract class AbstractPool
 
     public function __construct($maxNum = 10)
     {
-        $this->queue = new \SplQueue();
-        $this->chan = new Channel(128);
+        $this->chan = new Channel($maxNum+1);
         $this->max = $maxNum;
     }
 
@@ -46,8 +44,7 @@ abstract class AbstractPool
                     $obj->objectRestore();
                 }
                 $obj->last_recycle_time = time();
-                $this->queue->enqueue($obj);
-                $this->chan->push(1);
+                $this->chan->push($obj);
                 return true;
             }else{
                 return false;
@@ -60,52 +57,32 @@ abstract class AbstractPool
     public function getObj(float $timeout = 0.1)
     {
         //懒惰创建模式
-        if($this->queue->isEmpty()){
+        $obj = null;
+        if($this->chan->isEmpty()){
+            //如果还没有达到最大连接数，则尝试进行创建
             if($this->createdNum < $this->max){
                 $this->createdNum++;
                 $obj = $this->createObject();
-                if(is_object($obj)){
-                    $key = spl_object_hash($obj);
-                    //标记这个对象已经出队列了
-                    $this->objHash[$key] = true;
-                    //清空channel
-                    while (!$this->queue->isEmpty()){
-                        $this->queue->pop(0.00001);
-                    }
-                    $obj->last_use_time = time();
-                    return $obj;
-                }else{
+                if(!is_object($obj)){
                     $this->createdNum--;
+                    //创建失败，同样进入调度等待
+                    $obj = $this->chan->pop($timeout);
                 }
-            }
-            while (true){
-                /*
-                 * 如果上一个任务超时，没有pop成功，而归还任务的时候，会导致chan数据不为空，但队列无数据。
-                 * 仅仅利用channel用于通知超时调度
-                 */
-                $res = $this->chan->pop($timeout);
-                if($res > 0){
-                    if(!$this->queue->isEmpty()){
-                        $obj =  $this->queue->dequeue();
-                        $key = spl_object_hash($obj);
-                        //标记这个对象已经出队列了
-                        $this->objHash[$key] = true;
-                        $obj->last_use_time = time();
-                        return $obj;
-                    }
-                }else{
-                    return null;
-                }
+            }else{
+                $obj = $this->chan->pop($timeout);
             }
         }else{
-            //队列不为空，说明有出现recycle，recycle的时候，有push，请务必pop清除
-            $this->chan->pop($timeout);
-            $obj = $this->queue->dequeue();
-            //标记这个对象已经出队列了
+            $obj = $this->chan->pop($timeout);
+        }
+        //对对象进行标记处理
+        if(is_object($obj)){
             $key = spl_object_hash($obj);
+            //标记这个对象已经出队列了
             $this->objHash[$key] = true;
             $obj->last_use_time = time();
             return $obj;
+        }else{
+            return null;
         }
     }
 
@@ -135,8 +112,8 @@ abstract class AbstractPool
     {
         $list = [];
         while (true){
-            if(!$this->queue->isEmpty()){
-                $obj = $this->queue->pop();
+            if(!$this->chan->isEmpty()){
+                $obj = $this->chan->pop(0.001);
                 if($obj->last_recycle_time - $obj->last_use_time > $idleTime){
                     $this->unsetObj($obj);
                 }else{
@@ -147,7 +124,7 @@ abstract class AbstractPool
             }
         }
         foreach ($list as $item){
-            $this->queue->push($item);
+            $this->chan->push($item);
         }
     }
 
