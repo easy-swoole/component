@@ -27,7 +27,7 @@ class PoolManager
     {
         $ref = new \ReflectionClass($className);
         if($ref->isSubclassOf(AbstractPool::class)){
-            $this->pool[$this->generateKey($className)] = new $className($maxNum);
+            $this->pool[$this->generateKey($className)] = [$className,$maxNum];
             return true;
         }else{
             return false;
@@ -37,8 +37,14 @@ class PoolManager
     function getPool(string $className):?AbstractPool
     {
         $key = $this->generateKey($className);
-        if(isset($this->pool[$key])){
-            return $this->pool[$key];
+        if(isset($this->pool[$key]) && is_array($this->pool[$key])){
+            $className = $this->pool[$key][0];
+            $max = $this->pool[$key][1];
+            $obj = new $className($max);
+            $this->pool[$key] = $obj;
+            return $obj;
+        }else if(isset($this->pool[$key])){
+            return  $this->pool[$key];
         }else{
             return null;
         }
