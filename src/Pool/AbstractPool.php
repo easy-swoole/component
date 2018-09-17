@@ -114,7 +114,7 @@ abstract class AbstractPool
         while (true){
             if(!$this->chan->isEmpty()){
                 $obj = $this->chan->pop(0.001);
-                if($obj->last_recycle_time - $obj->last_use_time > $idleTime){
+                if(time() - $obj->last_recycle_time > $idleTime){
                     $this->unsetObj($obj);
                 }else{
                     array_push($list,$obj);
