@@ -16,9 +16,9 @@ class Context
     private $register = [];
     private $context = [];
 
-    function register(string $name,callable $call)
+    function register(string $name,$object)
     {
-        $this->register[$name] = $call;
+        $this->register[$name] = $object;
         return $this;
     }
 
@@ -28,7 +28,7 @@ class Context
      * @return mixed|null
      * @throws \Throwable
      */
-    function get(string $name, $cid = null)
+    function get(string $name, $cid = null,...$params)
     {
         if($cid === null){
             $cid = Co::getUid();
@@ -37,10 +37,19 @@ class Context
             return $this->context[$cid][$name];
         }else{
             if(isset($this->register[$name])){
-                $call = $this->register[$name];
-                $res = call_user_func($call);
-                $this->context[$cid][$name] = $res;
-                return $res;
+                $obj = $this->register[$name];
+                if(is_object($obj) || is_callable($obj)){
+                    return $obj;
+                }else if(is_string($obj) && class_exists($obj)){
+                    try{
+                        $this->context[$cid][$name] = new $obj(...$params);
+                        return $this->context[$cid][$name];
+                    }catch (\Throwable $throwable){
+                        throw $throwable;
+                    }
+                }else{
+                    return $obj;
+                }
             }else{
                 return null;
             }
