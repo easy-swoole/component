@@ -80,12 +80,28 @@ abstract class AbstractPool
             //标记这个对象已经出队列了
             $this->objHash[$key] = true;
             $obj->last_use_time = time();
+            if($obj instanceof PoolObjectInterface){
+                $status = false;
+                try{
+                    $status = $obj->beforeUse();
+                }catch (\Throwable $throwable){
+
+                }
+                if($status == false){
+                    $this->unsetObj($obj);
+                    //重新进入对象获取
+                    return $this->getObj($timeout);
+                }
+            }
             return $obj;
         }else{
             return null;
         }
     }
 
+    /*
+     * 彻底释放一个对象
+     */
     public function unsetObj($obj):bool
     {
         if(is_object($obj)){

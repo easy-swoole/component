@@ -19,4 +19,9 @@ abstract class AbstractPoolObject implements PoolObjectInterface
             $this->$property = $value;
         }
     }
+
+    function beforeUse():bool
+    {
+        return true;
+    }
 }
