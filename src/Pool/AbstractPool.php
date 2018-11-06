@@ -17,16 +17,20 @@ abstract class AbstractPool
     private $createdNum = 0;
     private $chan;
     private $objHash = [];
-
+    private $intervalCheckTime;
+    private $idleGCTime;
     /*
      * 如果成功创建了,请返回对应的obj
      */
     abstract protected function createObject() ;
 
-    public function __construct($maxNum = 10)
+    public function __construct($maxNum = 10,$intervalCheckTime = 30*1000,$idleGCTime = 15)
     {
         $this->chan = new Channel($maxNum+1);
         $this->max = $maxNum;
+        $this->intervalCheckTime = $intervalCheckTime;
+        $this->idleGCTime = $idleGCTime;
+        swoole_timer_tick($intervalCheckTime,[$this,'intervalCheck']);
     }
 
     /*
@@ -142,6 +146,11 @@ abstract class AbstractPool
         foreach ($list as $item){
             $this->chan->push($item);
         }
+    }
+
+    public function intervalCheck()
+    {
+        $this->gcObject($this->idleGCTime);
     }
 
 }

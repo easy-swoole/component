@@ -34,6 +34,9 @@ class PoolManager
         }
     }
 
+    /*
+     * 请在进程克隆后，也就是worker start后，每个进程中独立使用
+     */
     function getPool(string $className):?AbstractPool
     {
         $key = $this->generateKey($className);
