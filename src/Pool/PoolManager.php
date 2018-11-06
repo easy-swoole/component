@@ -17,17 +17,12 @@ class PoolManager
 
     private $pool = [];
 
-    /**
-     * @param string $className
-     * @param int $maxNum
-     * @return bool
-     * @throws \Throwable
-     */
-    function register(string $className, $maxNum = 20):bool
+
+    function register(string $className, $maxNum = 20,$intervalCheckTime = 30*1000,$idleGCTime = 15):bool
     {
         $ref = new \ReflectionClass($className);
         if($ref->isSubclassOf(AbstractPool::class)){
-            $this->pool[$this->generateKey($className)] = [$className,$maxNum];
+            $this->pool[$this->generateKey($className)] = [$className,$maxNum,$intervalCheckTime,$idleGCTime];
             return true;
         }else{
             return false;
@@ -41,9 +36,9 @@ class PoolManager
     {
         $key = $this->generateKey($className);
         if(isset($this->pool[$key]) && is_array($this->pool[$key])){
-            $className = $this->pool[$key][0];
-            $max = $this->pool[$key][1];
-            $obj = new $className($max);
+            $args = $this->pool[$key];
+            $className = array_shift($args);
+            $obj = new $className(...$args);
             $this->pool[$key] = $obj;
             return $obj;
         }else if(isset($this->pool[$key])){
