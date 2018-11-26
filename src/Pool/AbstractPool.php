@@ -148,7 +148,7 @@ abstract class AbstractPool
         }
     }
 
-    public function intervalCheck()
+    protected function intervalCheck()
     {
         $this->gcObject($this->idleGCTime);
     }
