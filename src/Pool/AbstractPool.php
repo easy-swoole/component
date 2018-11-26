@@ -30,7 +30,9 @@ abstract class AbstractPool
         $this->max = $maxNum;
         $this->intervalCheckTime = $intervalCheckTime;
         $this->idleGCTime = $idleGCTime;
-        swoole_timer_tick($intervalCheckTime,[$this,'intervalCheck']);
+        if($intervalCheckTime > 0){
+            swoole_timer_tick($intervalCheckTime,[$this,'intervalCheck']);
+        }
     }
 
     /*
