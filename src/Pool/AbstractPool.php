@@ -60,14 +60,20 @@ abstract class AbstractPool
         }
     }
 
-    public function getObj(float $timeout = 0.1)
+    public function getObj(float $timeout = 0.1,int $tryTimes = 3)
     {
+        if($tryTimes <= 0){
+            return null;
+        }
         //懒惰创建模式
         $obj = null;
         if($this->chan->isEmpty()){
             //如果还没有达到最大连接数，则尝试进行创建
             if($this->createdNum < $this->max){
                 $this->createdNum++;
+                /*
+                 * 创建对象的时候，请加try,尽量不要抛出异常
+                 */
                 $obj = $this->createObject();
                 if(!is_object($obj)){
                     $this->createdNum--;
@@ -96,7 +102,7 @@ abstract class AbstractPool
                 if($status == false){
                     $this->unsetObj($obj);
                     //重新进入对象获取
-                    return $this->getObj($timeout);
+                    return $this->getObj($timeout,$tryTimes - 1);
                 }
             }
             return $obj;
