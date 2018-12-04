@@ -9,6 +9,7 @@
 namespace EasySwoole\Component\Pool;
 
 
+use EasySwoole\Component\Pool\Exception\PoolEmpty;
 use Swoole\Coroutine\Channel;
 
 abstract class AbstractPool
@@ -165,6 +166,21 @@ abstract class AbstractPool
     protected function getPoolConfig():PoolConf
     {
         return $this->conf;
+    }
+
+    public function invoke(callable $call,float $timeout = null)
+    {
+        $obj = $this->getObj($timeout);
+        if($obj){
+            try{
+                call_user_func($call,$obj);
+            }catch (\Throwable $throwable){
+                $this->recycleObj($obj);
+                throw $throwable;
+            }
+        }else{
+            throw new PoolEmpty(static::class." pool is empty");
+        }
     }
 
 }
