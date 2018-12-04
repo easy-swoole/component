@@ -13,25 +13,21 @@ use Swoole\Coroutine\Channel;
 
 abstract class AbstractPool
 {
-    private $max;
     private $createdNum = 0;
     private $chan;
     private $objHash = [];
-    private $intervalCheckTime;
-    private $idleGCTime;
+    private $conf;
     /*
      * 如果成功创建了,请返回对应的obj
      */
     abstract protected function createObject() ;
 
-    public function __construct($maxNum = 10,$intervalCheckTime = 30*1000,$idleGCTime = 15)
+    public function __construct(PoolConf $conf)
     {
-        $this->chan = new Channel($maxNum+1);
-        $this->max = $maxNum;
-        $this->intervalCheckTime = $intervalCheckTime;
-        $this->idleGCTime = $idleGCTime;
-        if($intervalCheckTime > 0){
-            swoole_timer_tick($intervalCheckTime,[$this,'intervalCheck']);
+        $this->conf = $conf;
+        $this->chan = new Channel($conf->getMaxObjectNum() + 1);
+        if($conf->getIntervalCheckTime() > 0){
+            swoole_timer_tick($conf->getIntervalCheckTime(),[$this,'intervalCheck']);
         }
     }
 
@@ -60,8 +56,11 @@ abstract class AbstractPool
         }
     }
 
-    public function getObj(float $timeout = 0.1,int $tryTimes = 3)
+    public function getObj(float $timeout = null,int $tryTimes = 3)
     {
+        if($timeout === null){
+            $timeout = $this->conf->getGetObjectTimeout();
+        }
         if($tryTimes <= 0){
             return null;
         }
@@ -69,7 +68,7 @@ abstract class AbstractPool
         $obj = null;
         if($this->chan->isEmpty()){
             //如果还没有达到最大连接数，则尝试进行创建
-            if($this->createdNum < $this->max){
+            if($this->createdNum < $this->conf->getMaxObjectNum()){
                 $this->createdNum++;
                 /*
                  * 创建对象的时候，请加try,尽量不要抛出异常
@@ -160,7 +159,12 @@ abstract class AbstractPool
 
     protected function intervalCheck()
     {
-        $this->gcObject($this->idleGCTime);
+        $this->gcObject($this->conf->getMaxIdleTime());
+    }
+
+    protected function getPoolConfig():PoolConf
+    {
+        return $this->conf;
     }
 
 }
