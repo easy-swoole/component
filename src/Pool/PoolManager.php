@@ -37,17 +37,18 @@ class PoolManager
     function getPool(string $className):?AbstractPool
     {
         $key = $this->generateKey($className);
-        if(isset($this->pool[$key]) && is_array($this->pool[$key])){
-            $args = $this->pool[$key];
-            $className = array_shift($args);
-            $obj = new $className(...$args);
-            $this->pool[$key] = $obj;
-            return $obj;
-        }else if(isset($this->pool[$key])){
-            return  $this->pool[$key];
-        }else{
-            return null;
+        if(isset($this->pool[$key])){
+            $item = $this->pool[$key];
+            if($item instanceof AbstractPool){
+                return $item;
+            }else if($item instanceof PoolConf){
+                $className = $item->getClass();
+                $obj = new $className($item);
+                $this->pool[$key] = $obj;
+                return $obj;
+            }
         }
+        return null;
     }
 
     private function generateKey(string $class):string
