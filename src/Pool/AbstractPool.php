@@ -173,7 +173,9 @@ abstract class AbstractPool
         $obj = $this->getObj($timeout);
         if($obj){
             try{
-                call_user_func($call,$obj);
+                $ret = call_user_func($call,$obj);
+                $this->recycleObj($obj);
+                return $ret;
             }catch (\Throwable $throwable){
                 $this->recycleObj($obj);
                 throw $throwable;
