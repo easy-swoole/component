@@ -10,6 +10,7 @@ namespace EasySwoole\Component\Pool;
 
 
 use EasySwoole\Component\Pool\Exception\PoolEmpty;
+use EasySwoole\Component\Pool\Exception\PoolUnRegister;
 use Swoole\Coroutine\Channel;
 
 abstract class AbstractPool
@@ -168,20 +169,25 @@ abstract class AbstractPool
         return $this->conf;
     }
 
-    public function invoke(callable $call,float $timeout = null)
+    public static function invoke(callable $call,float $timeout = null)
     {
-        $obj = $this->getObj($timeout);
-        if($obj){
-            try{
-                $ret = call_user_func($call,$obj);
-                $this->recycleObj($obj);
-                return $ret;
-            }catch (\Throwable $throwable){
-                $this->recycleObj($obj);
-                throw $throwable;
+        $pool = PoolManager::getInstance()->getPool(static::class);
+        if($pool instanceof AbstractPool){
+            $obj = $pool->getObj($timeout);
+            if($obj){
+                try{
+                    $ret = call_user_func($call,$obj);
+                    $pool->recycleObj($obj);
+                    return $ret;
+                }catch (\Throwable $throwable){
+                    $pool->recycleObj($obj);
+                    throw $throwable;
+                }
+            }else{
+                throw new PoolEmpty(static::class." pool is empty");
             }
         }else{
-            throw new PoolEmpty(static::class." pool is empty");
+            throw new PoolUnRegister(static::class." pool is unregister");
         }
     }
 
