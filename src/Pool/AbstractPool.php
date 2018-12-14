@@ -177,11 +177,11 @@ abstract class AbstractPool
             if($obj){
                 try{
                     $ret = call_user_func($call,$obj);
-                    $pool->recycleObj($obj);
                     return $ret;
                 }catch (\Throwable $throwable){
-                    $pool->recycleObj($obj);
                     throw $throwable;
+                }finally{
+                    $pool->recycleObj($obj);
                 }
             }else{
                 throw new PoolEmpty(static::class." pool is empty");
