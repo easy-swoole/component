@@ -18,16 +18,16 @@ class PoolManager
     private $pool = [];
 
 
-    function register(string $className, $maxNum = 20):bool
+    function register(string $className, $maxNum = 20):PoolConf
     {
         $ref = new \ReflectionClass($className);
         if($ref->isSubclassOf(AbstractPool::class)){
             $conf = new PoolConf($className);
             $conf->setMaxObjectNum($maxNum);
             $this->pool[$this->generateKey($className)] = $conf;
-            return true;
+            return $conf;
         }else{
-            return false;
+            return null;
         }
     }
 
