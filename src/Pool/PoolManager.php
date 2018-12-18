@@ -18,7 +18,7 @@ class PoolManager
     private $pool = [];
 
 
-    function register(string $className, $maxNum = 20):PoolConf
+    function register(string $className, $maxNum = 20):?PoolConf
     {
         $ref = new \ReflectionClass($className);
         if($ref->isSubclassOf(AbstractPool::class)){
