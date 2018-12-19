@@ -198,10 +198,13 @@ abstract class AbstractPool
     {
         if($this->conf->getMaxObjectNum() > $num){
             $success = 0;
+            $t = time();
             for ($i= 0;$i < $num;$i++){
                 $this->createdNum++;
                 $ret = $this->createObject();
                 if(is_object($ret)){
+                    $ret->last_recycle_time = $t;
+                    $ret->last_use_time = $t;
                     $this->chan->push($ret);
                     $success++;
                 }else{
