@@ -191,4 +191,27 @@ abstract class AbstractPool
         }
     }
 
+    /*
+     * 用以解决冷启动问题
+     */
+    public function preLoad(int $num):int
+    {
+        if($this->conf->getMaxObjectNum() > $num){
+            $success = 0;
+            for ($i= 0;$i < $num;$i++){
+                $this->createdNum++;
+                $ret = $this->createObject();
+                if(is_object($ret)){
+                    $this->chan->push($ret);
+                    $success++;
+                }else{
+                    $this->createdNum--;
+                }
+            }
+            return $success;
+        }else{
+            throw new \Exception("preLoad num:{$num} must small then max object num:{$this->conf->getMaxObjectNum()} for Pool class:{$this->conf->getClass()}");
+        }
+    }
+
 }
