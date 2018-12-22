@@ -10,6 +10,7 @@ namespace EasySwoole\Component\Pool;
 
 
 use EasySwoole\Component\Pool\Exception\PoolEmpty;
+use EasySwoole\Component\Pool\Exception\PoolNumError;
 use EasySwoole\Component\Pool\Exception\PoolUnRegister;
 use Swoole\Coroutine\Channel;
 
@@ -26,6 +27,10 @@ abstract class AbstractPool
 
     public function __construct(PoolConf $conf)
     {
+        if($conf->getMinObjectNum() >= $conf->getMaxObjectNum()){
+            $class = static::class;
+            throw new PoolNumError("pool num setting of {$class} error");
+        }
         $this->conf = $conf;
         $this->chan = new Channel($conf->getMaxObjectNum() + 1);
         if($conf->getIntervalCheckTime() > 0){
@@ -162,6 +167,7 @@ abstract class AbstractPool
     protected function intervalCheck()
     {
         $this->gcObject($this->conf->getMaxIdleTime());
+        $this->keepMin();
     }
 
     protected function getPoolConfig():PoolConf
@@ -191,30 +197,39 @@ abstract class AbstractPool
         }
     }
 
-    /*
-     * 用以解决冷启动问题
-     */
-    public function preLoad(int $num):int
+    public function keepMin(?int $num = null):int
     {
-        if($this->conf->getMaxObjectNum() > $num){
-            $success = 0;
-            $t = time();
-            for ($i= 0;$i < $num;$i++){
-                $this->createdNum++;
-                $ret = $this->createObject();
-                if(is_object($ret)){
-                    $ret->last_recycle_time = $t;
-                    $ret->last_use_time = $t;
-                    $this->chan->push($ret);
-                    $success++;
-                }else{
-                    $this->createdNum--;
-                }
-            }
-            return $success;
-        }else{
-            throw new \Exception("preLoad num:{$num} must small then max object num:{$this->conf->getMaxObjectNum()} for Pool class:{$this->conf->getClass()}");
+        if($num == null){
+            $num = $this->conf->getMinObjectNum();
         }
+        if($this->createdNum >= $num){
+            return $this->createdNum;
+        }else{
+            $num = $num - $this->createdNum;
+        }
+        $success = 0;
+        $t = time();
+        for ($i= 0;$i < $num;$i++){
+            $this->createdNum++;
+            $ret = $this->createObject();
+            if(is_object($ret)){
+                $ret->last_recycle_time = $t;
+                $ret->last_use_time = $t;
+                $this->chan->push($ret);
+                $success++;
+            }else{
+                $this->createdNum--;
+            }
+        }
+        return $this->createdNum;
+    }
+
+    /*
+     * 用以解决冷启动问题,其实是是keepMin别名
+    */
+    public function preLoad(?int $num = null):int
+    {
+        return $this->keepMin($num);
     }
 
 }

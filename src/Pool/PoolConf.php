@@ -15,6 +15,7 @@ class PoolConf
     protected $intervalCheckTime = 30*1000;
     protected $maxIdleTime = 15;
     protected $maxObjectNum = 20;
+    protected $minObjectNum = 5;
     protected $getObjectTimeout = 0.5;
 
     protected $extraConf = [];
@@ -111,6 +112,22 @@ class PoolConf
     public function setExtraConf(array $extraConf): void
     {
         $this->extraConf = $extraConf;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMinObjectNum(): int
+    {
+        return $this->minObjectNum;
+    }
+
+    /**
+     * @param int $minObjectNum
+     */
+    public function setMinObjectNum(int $minObjectNum): void
+    {
+        $this->minObjectNum = $minObjectNum;
     }
 
 }
