@@ -43,11 +43,13 @@ class PoolConf
     }
 
     /**
-     * @param float|int $intervalCheckTime
+     * @param $intervalCheckTime
+     * @return PoolConf
      */
-    public function setIntervalCheckTime($intervalCheckTime): void
+    public function setIntervalCheckTime($intervalCheckTime): PoolConf
     {
         $this->intervalCheckTime = $intervalCheckTime;
+        return $this;
     }
 
     /**
@@ -60,10 +62,12 @@ class PoolConf
 
     /**
      * @param int $maxIdleTime
+     * @return PoolConf
      */
-    public function setMaxIdleTime(int $maxIdleTime): void
+    public function setMaxIdleTime(int $maxIdleTime): PoolConf
     {
         $this->maxIdleTime = $maxIdleTime;
+        return $this;
     }
 
     /**
@@ -76,10 +80,12 @@ class PoolConf
 
     /**
      * @param int $maxObjectNum
+     * @return PoolConf
      */
-    public function setMaxObjectNum(int $maxObjectNum): void
+    public function setMaxObjectNum(int $maxObjectNum): PoolConf
     {
         $this->maxObjectNum = $maxObjectNum;
+        return $this;
     }
 
     /**
@@ -92,10 +98,12 @@ class PoolConf
 
     /**
      * @param float $getObjectTimeout
+     * @return PoolConf
      */
-    public function setGetObjectTimeout(float $getObjectTimeout): void
+    public function setGetObjectTimeout(float $getObjectTimeout): PoolConf
     {
         $this->getObjectTimeout = $getObjectTimeout;
+        return $this;
     }
 
     /**
@@ -108,10 +116,12 @@ class PoolConf
 
     /**
      * @param array $extraConf
+     * @return PoolConf
      */
-    public function setExtraConf(array $extraConf): void
+    public function setExtraConf(array $extraConf): PoolConf
     {
         $this->extraConf = $extraConf;
+        return $this;
     }
 
     /**
@@ -124,10 +134,12 @@ class PoolConf
 
     /**
      * @param int $minObjectNum
+     * @return PoolConf
      */
-    public function setMinObjectNum(int $minObjectNum): void
+    public function setMinObjectNum(int $minObjectNum): PoolConf
     {
         $this->minObjectNum = $minObjectNum;
+        return $this;
     }
 
 }
