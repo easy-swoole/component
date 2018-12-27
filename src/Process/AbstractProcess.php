@@ -83,7 +83,11 @@ abstract class AbstractProcess
                 $this->onReceive($msg);
             });
         }
-        $this->run($this->swooleProcess);
+        try{
+            $this->run($this->swooleProcess);
+        }catch (\Throwable $throwable){
+            $this->onException($throwable);
+        }
     }
 
     public function getArgs():array
@@ -103,6 +107,10 @@ abstract class AbstractProcess
     public function getProcessName()
     {
         return $this->processName;
+    }
+
+    protected function onException(\Throwable $throwable){
+        throw $throwable;
     }
 
     public abstract function run(Process $process);
