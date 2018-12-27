@@ -14,13 +14,11 @@ abstract class AbstractProcess
 {
     private $swooleProcess;
     private $processName;
-    private $async = null;
-    private $args = [];
+    private $arg;
 
-    final function __construct(string $processName,array $args = [],$async = true)
+    final function __construct(string $processName,$arg = null)
     {
-        $this->async = $async;
-        $this->args = $args;
+        $this->arg = $arg;
         $this->processName = $processName;
         $this->swooleProcess = new \swoole_process([$this,'__start']);
     }
@@ -73,35 +71,29 @@ abstract class AbstractProcess
         }
 
         Process::signal(SIGTERM,function ()use($process){
-            $this->onShutDown();
+            try{
+                $this->onShutDown();
+            }catch (\Throwable $throwable){
+                $this->onException($throwable);
+            }
             swoole_event_del($process->pipe);
             $this->swooleProcess->exit(0);
+
         });
-        if($this->async){
-            swoole_event_add($this->swooleProcess->pipe, function(){
-                $msg = $this->swooleProcess->read(64 * 1024);
-                $this->onReceive($msg);
-            });
-        }
+        swoole_event_add($this->swooleProcess->pipe, function(){
+            $msg = $this->swooleProcess->read(64 * 1024);
+            $this->onReceive($msg);
+        });
         try{
-            $this->run($this->swooleProcess);
+            $this->run($this->arg);
         }catch (\Throwable $throwable){
             $this->onException($throwable);
         }
     }
 
-    public function getArgs():array
+    public function getArg()
     {
-        return $this->args;
-    }
-
-    public function getArg($key)
-    {
-        if(isset($this->args[$key])){
-            return $this->args[$key];
-        }else{
-            return null;
-        }
+        return $this->arg;
     }
 
     public function getProcessName()
@@ -113,7 +105,7 @@ abstract class AbstractProcess
         throw $throwable;
     }
 
-    public abstract function run(Process $process);
+    public abstract function run($arg);
     public abstract function onShutDown();
     public abstract function onReceive(string $str);
 }
