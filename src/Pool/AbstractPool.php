@@ -29,7 +29,7 @@ abstract class AbstractPool
     {
         if($conf->getMinObjectNum() >= $conf->getMaxObjectNum()){
             $class = static::class;
-            throw new PoolNumError("pool num setting of {$class} error");
+            throw new PoolNumError("pool max num is small than min num for {$class} error");
         }
         $this->conf = $conf;
         $this->chan = new Channel($conf->getMaxObjectNum() + 1);
@@ -44,20 +44,10 @@ abstract class AbstractPool
     public function recycleObj($obj):bool
     {
         if(is_object($obj)){
-            //防止一个对象被重复入队列。
-            $key = spl_object_hash($obj);
-            if(isset($this->objHash[$key])){
-                //标记这个对象已经入队列了
-                unset($this->objHash[$key]);
-                if($obj instanceof PoolObjectInterface){
-                    $obj->objectRestore();
-                }
-                $obj->last_recycle_time = time();
-                $this->chan->push($obj);
-                return true;
-            }else{
-                return false;
+            if($obj instanceof PoolObjectInterface){
+                $obj->objectRestore();
             }
+            return $this->putObject($obj);
         }else{
             return false;
         }
@@ -81,11 +71,11 @@ abstract class AbstractPool
                  * 创建对象的时候，请加try,尽量不要抛出异常
                  */
                 $obj = $this->createObject();
-                if(!is_object($obj)){
+                if(!$this->putObject($obj)){
                     $this->createdNum--;
-                    //创建失败，同样进入调度等待
-                    $obj = $this->chan->pop($timeout);
                 }
+                //同样进入调度等待,理论上此处可以马上pop出来
+                $obj = $this->chan->pop($timeout);
             }else{
                 $obj = $this->chan->pop($timeout);
             }
@@ -96,15 +86,10 @@ abstract class AbstractPool
         if(is_object($obj)){
             $key = spl_object_hash($obj);
             //标记这个对象已经出队列了
-            $this->objHash[$key] = true;
-            $obj->last_use_time = time();
+            $this->objHash[$key] = false;
             if($obj instanceof PoolObjectInterface){
-                $status = false;
-                try{
-                    $status = $obj->beforeUse();
-                }catch (\Throwable $throwable){
-
-                }
+                //请加try,尽量不要抛出异常
+                $status = $obj->beforeUse();
                 if($status == false){
                     $this->unsetObj($obj);
                     //重新进入对象获取
@@ -124,16 +109,18 @@ abstract class AbstractPool
     {
         if(is_object($obj)){
             $key = spl_object_hash($obj);
-            if($obj instanceof PoolObjectInterface){
-                $obj->objectRestore();
-                $obj->gc();
-            }
             if(isset($this->objHash[$key])){
                 unset($this->objHash[$key]);
+                if($obj instanceof PoolObjectInterface){
+                    $obj->objectRestore();
+                    $obj->gc();
+                }
+                unset($obj);
+                $this->createdNum--;
+                return true;
+            }else{
+                return false;
             }
-            unset($obj);
-            $this->createdNum--;
-            return true;
         }else{
             return false;
         }
@@ -207,17 +194,11 @@ abstract class AbstractPool
         }else{
             $num = $num - $this->createdNum;
         }
-        $success = 0;
-        $t = time();
+
         for ($i= 0;$i < $num;$i++){
             $this->createdNum++;
             $ret = $this->createObject();
-            if(is_object($ret)){
-                $ret->last_recycle_time = $t;
-                $ret->last_use_time = $t;
-                $this->chan->push($ret);
-                $success++;
-            }else{
+            if(!$this->putObject($ret)){
                 $this->createdNum--;
             }
         }
@@ -232,4 +213,21 @@ abstract class AbstractPool
         return $this->keepMin($num);
     }
 
+    /*
+     * 把一个对象归还到队列中
+     */
+    protected function putObject($object):bool
+    {
+        if(is_object($object)){
+            $hash = spl_object_hash($object);
+            //不在的时候说明为新对象，状态为false的时候，说明链接呗取出，允许归还
+            if(!isset($this->objHash[$hash]) || ($this->objHash[$hash] == false)){
+                $object->last_recycle_time = time();
+                $this->objHash[$hash] = true;
+                $this->chan->push($object);
+                return true;
+            }
+        }
+        return false;
+    }
 }
