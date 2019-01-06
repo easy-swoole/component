@@ -20,7 +20,7 @@ class PoolConf
 
     protected $extraConf = [];
 
-    function __construct(string $class)
+    function __construct(?string $class = null)
     {
         $this->class = $class;
     }
@@ -31,6 +31,11 @@ class PoolConf
     public function getClass(): string
     {
         return $this->class;
+    }
+
+    public function setClass(string $className)
+    {
+        $this->class = $className;
     }
 
 

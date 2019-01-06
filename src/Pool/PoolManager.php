@@ -16,13 +16,24 @@ class PoolManager
     use Singleton;
 
     private $pool = [];
+    private $defaultConfig;
 
+    function __construct()
+    {
+        $this->defaultConfig = new PoolConf();
+    }
+
+    function getDefaultConfig()
+    {
+        return $this->defaultConfig;
+    }
 
     function register(string $className, $maxNum = 20):?PoolConf
     {
         $ref = new \ReflectionClass($className);
         if($ref->isSubclassOf(AbstractPool::class)){
-            $conf = new PoolConf($className);
+            $conf = clone $this->defaultConfig;
+            $conf->setClass($className);
             $conf->setMaxObjectNum($maxNum);
             $this->pool[$this->generateKey($className)] = $conf;
             return $conf;
@@ -47,6 +58,21 @@ class PoolManager
                 $this->pool[$key] = $obj;
                 return $obj;
             }
+        }else if(class_exists($className)){
+            if(!$this->register($className)){
+                $config = clone $this->defaultConfig;
+                $config->setClass($className);
+                $pool = new class($config) extends AbstractPool{
+                    protected function createObject()
+                    {
+                        // TODO: Implement createObject() method.
+                        $className = $this->getPoolConfig()->getClass();
+                        return new $className;
+                    }
+                };
+                $this->pool[$key] = $pool;
+            }
+            return $this->getPool($className);
         }
         return null;
     }

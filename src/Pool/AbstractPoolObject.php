@@ -24,4 +24,9 @@ abstract class AbstractPoolObject implements PoolObjectInterface
     {
         return true;
     }
+
+    function objectRestore()
+    {
+
+    }
 }
