@@ -14,6 +14,13 @@ use PHPUnit\Framework\TestCase;
 
 class PoolTest extends TestCase
 {
+    function __construct(?string $name = null, array $data = [], string $dataName = '')
+    {
+        //cli下关闭pool的自动定时检查
+        PoolManager::getInstance()->getDefaultConfig()->setIntervalCheckTime(0);
+        parent::__construct($name, $data, $dataName);
+    }
+
     function testNormalClass()
     {
         $pool = PoolManager::getInstance()->getPool(PoolObject::class);
