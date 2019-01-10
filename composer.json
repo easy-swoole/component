@@ -15,7 +15,9 @@
         "php": ">=7.1.0",
         "ext-swoole":"^4.0",
         "easyswoole/swoole-ide-helper": "^1.2",
-        "easyswoole/utility": "^1.0",
+        "easyswoole/utility": "^1.0"
+    },
+    "require-dev": {
         "easyswoole/phpunit": "^1.0"
     },
     "autoload": {
