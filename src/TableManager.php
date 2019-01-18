@@ -15,7 +15,7 @@ class TableManager
 {
     use Singleton;
     
-    const TYPE_INT = Table::TYPE_INIT;
+    const TYPE_INT = Table::TYPE_INT;
     const TYPE_FLOAT = Table::TYPE_FLOAT;
     const TYPE_STRING = Table::TYPE_STRING;
 
