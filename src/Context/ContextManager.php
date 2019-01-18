@@ -21,6 +21,8 @@ class ContextManager
 
     private $context = [];
 
+    private $deferList = [];
+
     public function handler($key,HandlerInterface $handler):ContextManager
     {
         $this->handler[$key] = $handler;
@@ -84,7 +86,15 @@ class ContextManager
     public function getCid($cid = null):int
     {
         if($cid === null){
-            return Coroutine::getUid();
+            $cid = Coroutine::getUid();
+            if(!isset($this->deferList[$cid])){
+                $this->deferList[$cid] = true;
+                defer(function ()use($cid){
+                    unset($this->deferList[$cid]);
+                    $this->destroy($cid);
+                });
+            }
+            return $cid;
         }
         return $cid;
     }
