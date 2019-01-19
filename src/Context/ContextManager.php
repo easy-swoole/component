@@ -23,7 +23,7 @@ class ContextManager
 
     private $deferList = [];
 
-    public function registerContextHandler($key, ContextHandlerInterface $handler):ContextManager
+    public function registerItemHandler($key, ContextHandlerInterface $handler):ContextManager
     {
         $this->contextHandler[$key] = $handler;
         return $this;
@@ -32,7 +32,7 @@ class ContextManager
     public function set($key,$value,$cid = null):ContextManager
     {
         if(isset($this->contextHandler[$key])){
-            throw new ModifyError('key is already been register for context handler');
+            throw new ModifyError('key is already been register for context item handler');
         }
         $cid = $this->getCid($cid);
         $this->context[$cid][$key] = $value;
