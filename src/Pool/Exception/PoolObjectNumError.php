@@ -2,14 +2,14 @@
 /**
  * Created by PhpStorm.
  * User: yf
- * Date: 2018/12/9
- * Time: 10:07 AM
+ * Date: 2018/12/22
+ * Time: 7:46 PM
  */
 
 namespace EasySwoole\Component\Pool\Exception;
 
 
-class PoolUnRegister extends \Exception
+class PoolObjectNumError extends PoolException
 {
 
 }

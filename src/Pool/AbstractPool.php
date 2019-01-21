@@ -10,8 +10,8 @@ namespace EasySwoole\Component\Pool;
 
 
 use EasySwoole\Component\Pool\Exception\PoolEmpty;
-use EasySwoole\Component\Pool\Exception\PoolNumError;
-use EasySwoole\Component\Pool\Exception\PoolUnRegister;
+use EasySwoole\Component\Pool\Exception\PoolObjectNumError;
+use EasySwoole\Component\Pool\Exception\PoolException;
 use EasySwoole\Utility\Random;
 use Swoole\Coroutine\Channel;
 
@@ -31,7 +31,7 @@ abstract class AbstractPool
     {
         if($conf->getMinObjectNum() >= $conf->getMaxObjectNum()){
             $class = static::class;
-            throw new PoolNumError("pool max num is small than min num for {$class} error");
+            throw new PoolObjectNumError("pool max num is small than min num for {$class} error");
         }
         $this->conf = $conf;
         $this->poolChannel = new Channel($conf->getMaxObjectNum() + 1);
@@ -198,7 +198,7 @@ abstract class AbstractPool
                 throw new PoolEmpty(static::class." pool is empty");
             }
         }else{
-            throw new PoolUnRegister(static::class." pool is unregister");
+            throw new PoolException(static::class." convert to pool error");
         }
     }
 

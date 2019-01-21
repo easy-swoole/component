@@ -10,7 +10,7 @@ namespace EasySwoole\Component\Pool;
 
 
 use EasySwoole\Component\Pool\Exception\PoolEmpty;
-use EasySwoole\Component\Pool\Exception\PoolUnRegister;
+use EasySwoole\Component\Pool\Exception\PoolException;
 
 trait TraitObjectInvoker
 {
@@ -32,7 +32,7 @@ trait TraitObjectInvoker
                 throw new PoolEmpty(static::class." pool is empty");
             }
         }else{
-            throw new PoolUnRegister(static::class." pool is unregister");
+            throw new PoolException(static::class." convert to pool error");
         }
     }
 }
