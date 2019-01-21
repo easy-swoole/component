@@ -9,7 +9,7 @@
 namespace EasySwoole\Component\Context;
 
 
-interface ContextHandlerInterface
+interface ContextItemHandlerInterface
 {
     function onContextCreate();
     function onDestroy($context);

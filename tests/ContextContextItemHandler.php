@@ -9,10 +9,10 @@
 namespace EasySwoole\Component\Tests;
 
 
-use EasySwoole\Component\Context\ContextHandlerInterface;
+use EasySwoole\Component\Context\ContextItemHandlerInterface;
 use EasySwoole\Utility\Random;
 
-class ContextContextHandler implements ContextHandlerInterface
+class ContextContextItemHandler implements ContextItemHandlerInterface
 {
 
     function onContextCreate()

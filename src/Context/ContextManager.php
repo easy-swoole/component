@@ -23,7 +23,7 @@ class ContextManager
 
     private $deferList = [];
 
-    public function registerItemHandler($key, ContextHandlerInterface $handler):ContextManager
+    public function registerItemHandler($key, ContextItemHandlerInterface $handler):ContextManager
     {
         $this->contextHandler[$key] = $handler;
         return $this;
@@ -46,7 +46,7 @@ class ContextManager
             return $this->context[$cid][$key];
         }
         if(isset($this->contextHandler[$key])){
-            /** @var ContextHandlerInterface $handler */
+            /** @var ContextItemHandlerInterface $handler */
             $handler = $this->contextHandler[$key];
             $this->context[$cid][$key] = $handler->onContextCreate();
             return $this->context[$cid][$key];
@@ -59,7 +59,7 @@ class ContextManager
         $cid = $this->getCid($cid);
         if(isset($this->context[$cid][$key])){
             if(isset($this->contextHandler[$key])){
-                /** @var ContextHandlerInterface $handler */
+                /** @var ContextItemHandlerInterface $handler */
                 $handler = $this->contextHandler[$key];
                 $item = $this->context[$cid][$key];
                 unset($this->context[$cid][$key]);
