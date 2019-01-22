@@ -87,6 +87,8 @@ abstract class AbstractPool
                         $this->createdNum--;
                         unset($this->objHash[$hash]);
                     }
+                }else{
+                    $this->createdNum--;
                 }
                 //同样进入调度等待,理论上此处可以马上pop出来
                 $obj = $this->poolChannel->pop($timeout);
@@ -226,6 +228,8 @@ abstract class AbstractPool
                 if (!$this->putObject($obj)) {
                     $this->createdNum--;
                 }
+            }else{
+                $this->createdNum--;
             }
 
         }
