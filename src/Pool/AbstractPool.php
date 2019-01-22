@@ -215,10 +215,18 @@ abstract class AbstractPool
 
         for ($i= 0;$i < $num;$i++){
             $this->createdNum++;
-            $ret = $this->createObject();
-            if(!$this->putObject($ret)){
-                $this->createdNum--;
+            $obj = $this->createObject();
+            $hash = Random::character(16);
+            if(is_object($obj)){
+                //标记手动标记一个id   spl_hash 存在坑
+                $obj->__objectHash = $hash;
+                //标记为false,才可以允许put回去队列
+                $this->objHash[$hash] = false;
+                if(!$this->putObject($obj)){
+                    $this->createdNum--;
+                }
             }
+
         }
         return $this->createdNum;
     }
