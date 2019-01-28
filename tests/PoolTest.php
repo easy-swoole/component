@@ -30,4 +30,25 @@ class PoolTest extends TestCase
         $obj = $pool->getObj();
         $this->assertEquals(PoolObject::class,$obj->fuck());
     }
+
+    function testNormalClass2()
+    {
+        $pool = PoolManager::getInstance()->getPool('test',function (){
+//            var_dump('dy');
+            return new PoolObject();
+        });
+        /**
+         * @var $obj PoolObject
+         */
+        $obj = $pool->getObj();
+        $hash1 = $obj->__objectHash;
+        $this->assertEquals(PoolObject::class,$obj->fuck());
+        $pool->recycleObj($obj);
+
+        $obj = $pool->getObj();
+        $hash2 = $obj->__objectHash;
+        $pool->recycleObj($obj);
+        $this->assertEquals($pool->status()['created'],1);
+        $this->assertEquals($hash1,$hash2);
+    }
 }

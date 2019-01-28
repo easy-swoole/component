@@ -30,14 +30,18 @@ class PoolManager
 
     function register(string $className, $maxNum = 20):?PoolConf
     {
-        $ref = new \ReflectionClass($className);
-        if($ref->isSubclassOf(AbstractPool::class)){
-            $conf = clone $this->defaultConfig;
-            $conf->setClass($className);
-            $conf->setMaxObjectNum($maxNum);
-            $this->pool[$this->generateKey($className)] = $conf;
-            return $conf;
-        }else{
+        try{
+            $ref = new \ReflectionClass($className);
+            if($ref->isSubclassOf(AbstractPool::class)){
+                $conf = clone $this->defaultConfig;
+                $conf->setClass($className);
+                $conf->setMaxObjectNum($maxNum);
+                $this->pool[$this->generateKey($className)] = $conf;
+                return $conf;
+            }else{
+                return null;
+            }
+        }catch (\Throwable $throwable){
             return null;
         }
     }
@@ -45,7 +49,7 @@ class PoolManager
     /*
      * 请在进程克隆后，也就是worker start后，每个进程中独立使用
      */
-    function getPool(string $className):?AbstractPool
+    function getPool(string $className,?callable $createCall = null):?AbstractPool
     {
         $key = $this->generateKey($className);
         if(isset($this->pool[$key])){
@@ -58,21 +62,34 @@ class PoolManager
                 $this->pool[$key] = $obj;
                 return $obj;
             }
-        }else if(class_exists($className)){
-            if(!$this->register($className)){
+        }else{
+            //尝试注册。
+            if(class_exists($this->register($className)) && $this->register($className)){
+                return $this->getPool($className);
+            }else{
                 $config = clone $this->defaultConfig;
                 $config->setClass($className);
-                $pool = new class($config) extends AbstractPool{
+                $pool = new class($config,$createCall) extends AbstractPool{
+                    protected $createCall;
+                    public function __construct(PoolConf $conf,$createCall)
+                    {
+                        $this->createCall = $createCall;
+                        parent::__construct($conf);
+                    }
                     protected function createObject()
                     {
                         // TODO: Implement createObject() method.
-                        $className = $this->getPoolConfig()->getClass();
-                        return new $className;
+                        if(is_callable($this->createCall)){
+                            return call_user_func($this->createCall);
+                        }else{
+                            $className = $this->getPoolConfig()->getClass();
+                            return new $className;
+                        }
                     }
                 };
                 $this->pool[$key] = $pool;
+                return $pool;
             }
-            return $this->getPool($className);
         }
         return null;
     }
