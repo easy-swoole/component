@@ -109,6 +109,7 @@ abstract class AbstractPool
                 $status = $obj->beforeUse();
                 if ($status === false) {
                     $this->unsetObj($obj);
+                    $this->inuse--;
                     //重新进入对象获取
                     return $this->getObj($timeout, $beforeUseTryTimes - 1);
                 }

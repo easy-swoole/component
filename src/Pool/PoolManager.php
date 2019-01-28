@@ -17,6 +17,7 @@ class PoolManager
 
     private $pool = [];
     private $defaultConfig;
+    private $classMap = [];
 
     function __construct()
     {
@@ -51,45 +52,51 @@ class PoolManager
      */
     function getPool(string $className,?callable $createCall = null):?AbstractPool
     {
-        $key = $this->generateKey($className);
+        //检查是否存在动态map
+        if(isset($this->classMap[$className])){
+            $key = $this->classMap[$className];
+        }else{
+            $key = $this->generateKey($className);
+        }
         if(isset($this->pool[$key])){
             $item = $this->pool[$key];
             if($item instanceof AbstractPool){
                 return $item;
             }else if($item instanceof PoolConf){
                 $className = $item->getClass();
+                /** @var AbstractPool $obj */
                 $obj = new $className($item);
                 $this->pool[$key] = $obj;
                 return $obj;
             }
         }else{
-            //尝试注册。
-            if(class_exists($this->register($className)) && $this->register($className)){
-                return $this->getPool($className);
-            }else{
+            //先尝试动态注册
+            if(!$this->register($className)){
                 $config = clone $this->defaultConfig;
                 $config->setClass($className);
-                $pool = new class($config,$createCall) extends AbstractPool{
+                $temp = new class($config,$createCall) extends AbstractPool{
                     protected $createCall;
                     public function __construct(PoolConf $conf,$createCall)
                     {
                         $this->createCall = $createCall;
                         parent::__construct($conf);
                     }
+
                     protected function createObject()
                     {
                         // TODO: Implement createObject() method.
                         if(is_callable($this->createCall)){
                             return call_user_func($this->createCall);
                         }else{
-                            $className = $this->getPoolConfig()->getClass();
-                            return new $className;
+                            $class = $this->getPoolConfig()->getClass();
+                            return new $class;
                         }
                     }
                 };
-                $this->pool[$key] = $pool;
-                return $pool;
+                $this->classMap[get_class($temp)] = $key;
+                $this->pool[$key] = $temp;
             }
+            return $this->getPool($className);
         }
         return null;
     }

@@ -50,5 +50,9 @@ class PoolTest extends TestCase
         $pool->recycleObj($obj);
         $this->assertEquals($pool->status()['created'],1);
         $this->assertEquals($hash1,$hash2);
+
+        $pool::invoke(function (PoolObject $object){
+            $this->assertEquals(PoolObject::class,$object->fuck());
+        });
     }
 }
