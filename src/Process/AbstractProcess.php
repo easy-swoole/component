@@ -66,10 +66,6 @@ abstract class AbstractProcess
             $process->name($this->getProcessName());
         }
 
-        if (extension_loaded('pcntl')) {
-            pcntl_async_signals(true);
-        }
-
         Process::signal(SIGTERM,function ()use($process){
             try{
                 $this->onShutDown();
@@ -77,8 +73,7 @@ abstract class AbstractProcess
                 $this->onException($throwable);
             }
             swoole_event_del($process->pipe);
-            $this->swooleProcess->exit(0);
-
+            Process::signal(SIGTERM,null);
         });
         swoole_event_add($this->swooleProcess->pipe, function(){
             $msg = $this->swooleProcess->read(64 * 1024);
