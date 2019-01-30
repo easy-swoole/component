@@ -15,6 +15,15 @@ abstract class AbstractProcess
     private $swooleProcess;
     private $processName;
     private $arg;
+    private $maxExitWaitTime = 3;
+
+    /**
+     * @param int $maxExitWaitTime
+     */
+    public function setMaxExitWaitTime(int $maxExitWaitTime): void
+    {
+        $this->maxExitWaitTime = $maxExitWaitTime;
+    }
 
     final function __construct(string $processName,$arg = null)
     {
@@ -76,7 +85,8 @@ abstract class AbstractProcess
                 }
                 swoole_event_del($process->pipe);
                 Process::signal(SIGTERM,null);
-                while(\co::sleep(0.01)){
+                $t = $this->maxExitWaitTime;
+                while($t > 0){
                     $exit = true;
                     foreach(\co::listCoroutines() as $id => $v) {
                         if ($id > $currentId){
@@ -87,7 +97,10 @@ abstract class AbstractProcess
                     if($exit){
                         $this->getProcess()->exit(0);
                     }
+                    \co::sleep(0.01);
+                    $t = $t - 0.01;
                 }
+                $this->getProcess()->exit(0);
             });
         });
         swoole_event_add($this->swooleProcess->pipe, function(){
