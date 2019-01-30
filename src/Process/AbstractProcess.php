@@ -67,13 +67,28 @@ abstract class AbstractProcess
         }
 
         Process::signal(SIGTERM,function ()use($process){
-            try{
-                $this->onShutDown();
-            }catch (\Throwable $throwable){
-                $this->onException($throwable);
-            }
-            swoole_event_del($process->pipe);
-            Process::signal(SIGTERM,null);
+            go(function ()use($process){
+                $currentId = \co::getuid();
+                try{
+                    $this->onShutDown();
+                }catch (\Throwable $throwable){
+                    $this->onException($throwable);
+                }
+                swoole_event_del($process->pipe);
+                Process::signal(SIGTERM,null);
+                while(\co::sleep(0.01)){
+                    $exit = true;
+                    foreach(\co::listCoroutines() as $id => $v) {
+                        if ($id > $currentId){
+                            $exit = false;
+                            break;
+                        }
+                    }
+                    if($exit){
+                        $this->getProcess()->exit(0);
+                    }
+                }
+            });
         });
         swoole_event_add($this->swooleProcess->pipe, function(){
             $msg = $this->swooleProcess->read(64 * 1024);
