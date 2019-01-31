@@ -95,7 +95,7 @@ abstract class AbstractProcess
                 while($t > 0){
                     $exit = true;
                     foreach ($diff as $cid){
-                        if(\co::getBackTrace($cid) == false){
+                        if(\co::getBackTrace($cid,DEBUG_BACKTRACE_PROVIDE_OBJECT|DEBUG_BACKTRACE_IGNORE_ARGS,1) == false){
                             $exit = true;
                         }else{
                             $exit = false;
