@@ -77,8 +77,7 @@ abstract class AbstractProcess
 
         Process::signal(SIGTERM,function ()use($process){
             go(function ()use($process){
-                //记录当前创建的协程数量
-                $current = count(\co::listCoroutines());
+                $new = iterator_to_array(\co::listCoroutines());
                 try{
                     $this->onShutDown();
                 }catch (\Throwable $throwable){
@@ -86,12 +85,27 @@ abstract class AbstractProcess
                 }
                 swoole_event_del($process->pipe);
                 Process::signal(SIGTERM,null);
+                $old = iterator_to_array(\co::listCoroutines());
+                $diff = array_diff($old,$new);
+                if(empty($diff)){
+                    $this->getProcess()->exit(0);
+                    return;
+                }
                 $t = $this->maxExitWaitTime;
-                while(\co::sleep(0.01) && $t > 0){
-                    //如果携程数量恢复，则说明onShutDown创建的协程已经全部执行完毕
-                    if($current >= count(\co::listCoroutines())){
+                while($t > 0){
+                    $exit = true;
+                    foreach ($diff as $cid){
+                        if(\co::getBackTrace($cid) == false){
+                            $exit = true;
+                        }else{
+                            $exit = false;
+                            continue;
+                        }
+                    }
+                    if($exit){
                         break;
                     }
+                    \co::sleep(0.01);
                     $t = $t - 0.01;
                 }
                 $this->getProcess()->exit(0);
