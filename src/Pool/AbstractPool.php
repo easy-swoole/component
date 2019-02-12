@@ -77,9 +77,9 @@ abstract class AbstractPool
                  * 创建对象的时候，请加try,尽量不要抛出异常
                  */
                 $obj = $this->createObject();
-                $hash = Random::character(16);
                 if (is_object($obj)) {
                     //标记手动标记一个id   spl_hash 存在坑
+                    $hash = Random::character(16);
                     $obj->__objectHash = $hash;
                     //标记为false,才可以允许put回去队列
                     $this->objHash[$hash] = false;
@@ -109,7 +109,6 @@ abstract class AbstractPool
                 $status = $obj->beforeUse();
                 if ($status === false) {
                     $this->unsetObj($obj);
-                    $this->inuse--;
                     //重新进入对象获取
                     return $this->getObj($timeout, $beforeUseTryTimes - 1);
                 }
@@ -264,6 +263,11 @@ abstract class AbstractPool
             }
         }
         return false;
+    }
+
+    protected function getConfig():PoolConf
+    {
+        return $this->conf;
     }
 
     public function status()
