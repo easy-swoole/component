@@ -1,4 +1,4 @@
-# PoolInterface
+## PoolInterface Example1
 
 ```
 use EasySwoole\Component\Pool\PoolManager;
@@ -115,4 +115,76 @@ go(function (){
     });
 });
 
+```
+## PoolInterface Example2
+```
+use EasySwoole\Component\Pool\PoolManager;
+use EasySwoole\Component\Pool\AbstractPool;
+use EasySwoole\Component\Pool\TraitInvoker;
+
+class TestPool extends AbstractPool{
+    function __construct(\EasySwoole\Component\Pool\PoolConf $conf)
+    {
+        var_dump('new TestPool');
+        parent::__construct($conf);
+    }
+
+    protected function createObject()
+    {
+        // TODO: Implement createObject() method.
+        return new \stdClass();
+    }
+
+}
+
+class TestPool2
+{
+    use TraitInvoker;
+    function __construct()
+    {
+        var_dump('new TestPool2');
+    }
+
+    function fuck()
+    {
+        var_dump('fuck');
+    }
+
+}
+
+go(function (){
+    PoolManager::getInstance()->registerAnonymous('test',function (){
+        return new SplFixedArray();
+    });
+    $pool = PoolManager::getInstance()->getPool(stdClass::class);
+    $pool2 = PoolManager::getInstance()->getPool(\Redis::class);
+    $pool3 = PoolManager::getInstance()->getPool('test');
+    $pool::invoke(function (stdClass $class){
+        var_dump($class);
+    });
+    $pool2::invoke(function (\Redis $class){
+        var_dump($class);
+    });
+    $pool3::invoke(function (SplFixedArray $array){
+        var_dump($array);
+    });
+
+    TestPool::invoke(function (\stdClass $class){
+//        var_dump($class);
+    });
+
+    $pool4 = PoolManager::getInstance()->getPool(TestPool::class);
+    $pool4::invoke(function (\stdClass $class){
+//        var_dump($class);
+    });
+
+    TestPool2::invoke(function ($class){
+        $class->fuck();
+    });
+    $pool5 = PoolManager::getInstance()->getPool(TestPool2::class);
+    $pool5::invoke(function (\TestPool2 $class){
+//        $class->fuck();
+    });
+
+});
 ```
