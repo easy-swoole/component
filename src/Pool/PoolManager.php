@@ -10,6 +10,7 @@ namespace EasySwoole\Component\Pool;
 
 
 use EasySwoole\Component\Singleton;
+use EasySwoole\Utility\Random;
 
 class PoolManager
 {
@@ -17,7 +18,8 @@ class PoolManager
 
     private $pool = [];
     private $defaultConfig;
-    private $classMap = [];
+    private $anonymousMap = [];
+
 
     function __construct()
     {
@@ -35,9 +37,11 @@ class PoolManager
             $ref = new \ReflectionClass($className);
             if($ref->isSubclassOf(AbstractPool::class)){
                 $conf = clone $this->defaultConfig;
-                $conf->setClass($className);
                 $conf->setMaxObjectNum($maxNum);
-                $this->pool[$this->generateKey($className)] = $conf;
+                $this->pool[$className] = [
+                    'class'=>$className,
+                    'config'=>$conf
+                ];
                 return $conf;
             }else{
                 return null;
@@ -47,62 +51,81 @@ class PoolManager
         }
     }
 
+    function registerAnonymous(string $name,?callable $createCall = null)
+    {
+        /*
+         * 绕过去实现动态class
+         */
+        $class = 'C'.Random::character(16);
+        $classContent = '<?php
+        class '.$class.' extends \EasySwoole\Component\Pool\AbstractPool {
+            private $call;
+            function __construct($conf,$call)
+            {
+                $this->call = $call;
+                parent::__construct($conf);
+            }
+
+            protected function createObject()
+            {
+                // TODO: Implement createObject() method.
+                return call_user_func($this->call);
+            }
+        }';
+        $file = sys_get_temp_dir()."/{$class}.php";
+        file_put_contents($file,$classContent);
+        require_once $file;
+        unlink($file);
+        if(!is_callable($createCall)){
+            if(class_exists($name)){
+                $createCall = function ()use($name){
+                    return new $name;
+                };
+            }else{
+                return false;
+            }
+        }
+        $this->pool[$name] = [
+            'class'=>$class,
+            'call'=>$createCall,
+        ];
+        return true;
+    }
+
     /*
      * 请在进程克隆后，也就是worker start后，每个进程中独立使用
      */
-    function getPool(string $className,?callable $createCall = null):?AbstractPool
+    function getPool(string $key):?AbstractPool
     {
-        //检查是否存在动态map
-        if(isset($this->classMap[$className])){
-            $key = $this->classMap[$className];
-        }else{
-            $key = $this->generateKey($className);
+        if(isset($this->anonymousMap[$key])){
+            $key = $this->anonymousMap[$key];
         }
         if(isset($this->pool[$key])){
             $item = $this->pool[$key];
             if($item instanceof AbstractPool){
                 return $item;
-            }else if($item instanceof PoolConf){
-                $className = $item->getClass();
-                /** @var AbstractPool $obj */
-                $obj = new $className($item);
-                $this->pool[$key] = $obj;
-                return $obj;
+            }else{
+                $class = $item['class'];
+                if(isset($item['config'])){
+                    $obj = new $class($item['config']);
+                    $this->pool[$key] = $obj;
+                }else{
+                    $config = clone $this->defaultConfig;
+                    $createCall = $item['call'];
+                    $obj = new $class($config,$createCall);
+                    $this->pool[$key] = $obj;
+                    $this->anonymousMap[get_class($obj)] = $key;
+                }
+                return $this->getPool($key);
             }
         }else{
             //先尝试动态注册
-            if(!$this->register($className)){
-                $config = clone $this->defaultConfig;
-                $config->setClass($className);
-                $temp = new class($config,$createCall) extends AbstractPool{
-                    protected $createCall;
-                    public function __construct(PoolConf $conf,$createCall)
-                    {
-                        $this->createCall = $createCall;
-                        parent::__construct($conf);
-                    }
-
-                    protected function createObject()
-                    {
-                        // TODO: Implement createObject() method.
-                        if(is_callable($this->createCall)){
-                            return call_user_func($this->createCall);
-                        }else{
-                            $class = $this->getPoolConfig()->getClass();
-                            return new $class;
-                        }
-                    }
-                };
-                $this->classMap[get_class($temp)] = $key;
-                $this->pool[$key] = $temp;
+            if($this->register($key)){
+                return $this->getPool($key);
+            }else if(class_exists($key) && $this->registerAnonymous($key)){
+                return $this->getPool($key);
             }
-            return $this->getPool($className);
+            return null;
         }
-        return null;
-    }
-
-    private function generateKey(string $class):string
-    {
-        return substr(md5($class), 8, 16);
     }
 }

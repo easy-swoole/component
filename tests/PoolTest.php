@@ -33,10 +33,15 @@ class PoolTest extends TestCase
 
     function testNormalClass2()
     {
-        $pool = PoolManager::getInstance()->getPool('test',function (){
-//            var_dump('dy');
+        PoolManager::getInstance()->registerAnonymous('test',function (){
             return new PoolObject();
         });
+        $pool = PoolManager::getInstance()->getPool('test');
+
+        $pool2 = PoolManager::getInstance()->getPool(\stdClass::class);
+        $stdClass = $pool2->getObj();
+        $this->assertEquals(\stdClass::class,get_class($stdClass));
+        $this->assertEquals(true,$pool2->recycleObj($stdClass));
         /**
          * @var $obj PoolObject
          */
@@ -54,5 +59,7 @@ class PoolTest extends TestCase
         $pool::invoke(function (PoolObject $object){
             $this->assertEquals(PoolObject::class,$object->fuck());
         });
+
+
     }
 }

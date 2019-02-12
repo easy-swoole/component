@@ -13,7 +13,6 @@ use EasySwoole\Component\Pool\Exception\PoolObjectNumError;
 
 class PoolConf
 {
-    protected $class;
     protected $intervalCheckTime = 30*1000;
     protected $maxIdleTime = 15;
     protected $maxObjectNum = 20;
@@ -21,25 +20,6 @@ class PoolConf
     protected $getObjectTimeout = 3.0;
 
     protected $extraConf = [];
-
-    function __construct(?string $class = null)
-    {
-        $this->class = $class;
-    }
-
-    /**
-     * @return string
-     */
-    public function getClass(): string
-    {
-        return $this->class;
-    }
-
-    public function setClass(string $className)
-    {
-        $this->class = $className;
-    }
-
 
     /**
      * @return float|int

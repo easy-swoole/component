@@ -9,14 +9,14 @@
 namespace EasySwoole\Component\Pool;
 
 
-use EasySwoole\Component\Pool\Exception\PoolEmpty;
 use EasySwoole\Component\Pool\Exception\PoolObjectNumError;
-use EasySwoole\Component\Pool\Exception\PoolException;
 use EasySwoole\Utility\Random;
 use Swoole\Coroutine\Channel;
 
 abstract class AbstractPool
 {
+    use TraitInvoker;
+
     private $createdNum = 0;
     private $inuse = 0;
     private $poolChannel;
@@ -183,28 +183,6 @@ abstract class AbstractPool
         return $this->conf;
     }
 
-    public static function invoke(callable $call, float $timeout = null)
-    {
-        $pool = PoolManager::getInstance()->getPool(static::class);
-        if ($pool instanceof AbstractPool) {
-            $obj = $pool->getObj($timeout);
-            if ($obj) {
-                try {
-                    $ret = call_user_func($call, $obj);
-                    return $ret;
-                } catch (\Throwable $throwable) {
-                    throw $throwable;
-                } finally {
-                    $pool->recycleObj($obj);
-                }
-            } else {
-                throw new PoolEmpty(static::class . " pool is empty");
-            }
-        } else {
-            throw new PoolException(static::class . " convert to pool error");
-        }
-    }
-
     public function keepMin(?int $num = null): int
     {
         if ($num == null) {
@@ -265,7 +243,7 @@ abstract class AbstractPool
         return false;
     }
 
-    protected function getConfig():PoolConf
+    public function getConfig():PoolConf
     {
         return $this->conf;
     }

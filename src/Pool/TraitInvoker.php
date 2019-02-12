@@ -12,7 +12,7 @@ namespace EasySwoole\Component\Pool;
 use EasySwoole\Component\Pool\Exception\PoolEmpty;
 use EasySwoole\Component\Pool\Exception\PoolException;
 
-trait TraitObjectInvoker
+trait TraitInvoker
 {
     public static function invoke(callable $call,float $timeout = null)
     {
