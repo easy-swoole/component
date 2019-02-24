@@ -25,11 +25,11 @@ abstract class AbstractProcess
         $this->maxExitWaitTime = $maxExitWaitTime;
     }
 
-    final function __construct(string $processName,$arg = null)
+    final function __construct(string $processName,$arg = null,$redirectStdinStdout = false,$pipeType = 2,$enableCoroutine = false)
     {
         $this->arg = $arg;
         $this->processName = $processName;
-        $this->swooleProcess = new \swoole_process([$this,'__start'],false,2,true);
+        $this->swooleProcess = new \swoole_process([$this,'__start'],$redirectStdinStdout,$pipeType,$enableCoroutine);
     }
 
     public function getProcess():Process
