@@ -13,12 +13,12 @@
     ],
     "require": {
         "php": ">=7.1.0",
-        "ext-swoole":"^4.2.9",
-        "easyswoole/swoole-ide-helper": "^1.2",
+        "ext-swoole":"^4.3.0",
         "easyswoole/utility": "^1.0"
     },
     "require-dev": {
-        "easyswoole/phpunit": "^1.0"
+        "easyswoole/phpunit": "^1.0",
+        "easyswoole/swoole-ide-helper": "^1.2"
     },
     "autoload": {
         "psr-4": {

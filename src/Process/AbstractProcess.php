@@ -29,7 +29,7 @@ abstract class AbstractProcess
     {
         $this->arg = $arg;
         $this->processName = $processName;
-        $this->swooleProcess = new \swoole_process([$this,'__start']);
+        $this->swooleProcess = new \swoole_process([$this,'__start'],false,2,true);
     }
 
     public function getProcess():Process
