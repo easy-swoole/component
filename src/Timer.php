@@ -58,6 +58,7 @@ class Timer
             swoole_timer_clear($id);
         }
         $this->timerList = [];
+        $this->timerMap = [];
         return true;
     }
 
