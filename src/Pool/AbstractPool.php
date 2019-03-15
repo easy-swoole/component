@@ -168,7 +168,7 @@ abstract class AbstractPool
             }
         }
         foreach ($list as $item) {
-            $this->poolChannel->push($item);
+            $this->putObject($item);
         }
     }
 
@@ -233,7 +233,7 @@ abstract class AbstractPool
             }
             $hash = $object->__objectHash;
             //不在的时候说明为其他pool对象，不允许归还，若为true,说明已经归还，禁止重复
-            if (isset($this->objHash[$hash]) && ($this->objHash[$hash] == false)) {
+            if (isset($this->objHash[$hash]) && ($this->objHash[$hash] === false)) {
                 $object->last_recycle_time = time();
                 $this->objHash[$hash] = true;
                 $this->poolChannel->push($object);
