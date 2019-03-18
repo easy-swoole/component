@@ -160,6 +160,7 @@ abstract class AbstractPool
                     if (time() - $obj->last_recycle_time > $idleTime) {
                         $this->unsetObj($obj);
                     } else {
+                        $this->objHash[$obj->__objectHash] = false;
                         array_push($list, $obj);
                     }
                 }
