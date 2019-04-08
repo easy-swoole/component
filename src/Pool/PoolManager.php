@@ -9,6 +9,7 @@
 namespace EasySwoole\Component\Pool;
 
 
+use EasySwoole\Component\Pool\Exception\PoolException;
 use EasySwoole\Component\Singleton;
 use EasySwoole\Utility\Random;
 
@@ -31,23 +32,19 @@ class PoolManager
         return $this->defaultConfig;
     }
 
-    function register(string $className, $maxNum = 20):?PoolConf
+    function register(string $className, $maxNum = 20):PoolConf
     {
-        try{
-            $ref = new \ReflectionClass($className);
-            if($ref->isSubclassOf(AbstractPool::class)){
-                $conf = clone $this->defaultConfig;
-                $conf->setMaxObjectNum($maxNum);
-                $this->pool[$className] = [
-                    'class'=>$className,
-                    'config'=>$conf
-                ];
-                return $conf;
-            }else{
-                return null;
-            }
-        }catch (\Throwable $throwable){
-            return null;
+        $ref = new \ReflectionClass($className);
+        if($ref->isSubclassOf(AbstractPool::class)){
+            $conf = clone $this->defaultConfig;
+            $conf->setMaxObjectNum($maxNum);
+            $this->pool[$className] = [
+                'class'=>$className,
+                'config'=>$conf
+            ];
+            return $conf;
+        }else{
+            throw new PoolException("class {$className} not a sub class of AbstractPool class");
         }
     }
 
@@ -120,7 +117,13 @@ class PoolManager
             }
         }else{
             //先尝试动态注册
-            if($this->register($key)){
+            $ret = false;
+            try{
+                $ret = $this->register($key);
+            }catch (\Throwable $throwable){
+                //此处异常不向上抛。
+            }
+            if($ret){
                 return $this->getPool($key);
             }else if(class_exists($key) && $this->registerAnonymous($key)){
                 return $this->getPool($key);
