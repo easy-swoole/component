@@ -173,7 +173,10 @@ abstract class AbstractPool
         }
     }
 
-    protected function intervalCheck()
+    /*
+     * 允许外部调用
+     */
+    public function intervalCheck()
     {
         $this->gcObject($this->conf->getMaxIdleTime());
         $this->keepMin();
