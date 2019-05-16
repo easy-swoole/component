@@ -38,7 +38,7 @@ class AtomicManager
 
     function getLong($name):?Long
     {
-        if(!isset($this->listForLong[$name])){
+        if(isset($this->listForLong[$name])){
             return $this->listForLong[$name];
         }else{
             return null;
