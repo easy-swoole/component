@@ -19,7 +19,7 @@ class PoolConf
     protected $minObjectNum = 5;
     protected $getObjectTimeout = 3.0;
 
-    protected $extraConf = [];
+    protected $extraConf;
 
     /**
      * @return float|int
@@ -92,19 +92,16 @@ class PoolConf
         return $this;
     }
 
-    /**
-     * @return array
-     */
-    public function getExtraConf(): array
+    public function getExtraConf()
     {
         return $this->extraConf;
     }
 
     /**
-     * @param array $extraConf
+     * @param $extraConf
      * @return PoolConf
      */
-    public function setExtraConf(array $extraConf): PoolConf
+    public function setExtraConf($extraConf): PoolConf
     {
         $this->extraConf = $extraConf;
         return $this;
