@@ -46,12 +46,12 @@ class PoolTest extends TestCase
          * @var $obj PoolObject
          */
         $obj = $pool->getObj();
-        $hash1 = $obj->__objectHash;
+        $hash1 = $obj->__objHash;
         $this->assertEquals(PoolObject::class,$obj->fuck());
         $pool->recycleObj($obj);
 
         $obj = $pool->getObj();
-        $hash2 = $obj->__objectHash;
+        $hash2 = $obj->__objHash;
         $pool->recycleObj($obj);
         $this->assertEquals($pool->status()['created'],1);
         $this->assertEquals($hash1,$hash2);
