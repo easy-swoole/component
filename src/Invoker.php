@@ -12,6 +12,9 @@ use \Swoole\Process;
 
 class Invoker
 {
+    /*
+     * 以下方法进攻同步方法使用
+     */
     public static function exec(callable $callable,$timeOut = 100 * 1000,...$params)
     {
         pcntl_async_signals(true);

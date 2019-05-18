@@ -9,7 +9,6 @@
 namespace EasySwoole\Component;
 
 
-use EasySwoole\Trigger\Trigger;
 
 class MultiEvent extends MultiContainer
 {
