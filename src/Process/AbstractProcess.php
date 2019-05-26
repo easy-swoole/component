@@ -13,8 +13,8 @@ use Swoole\Process;
 abstract class AbstractProcess
 {
     private $swooleProcess;
-    private $processName;
-    private $arg;
+    /** @var Config */
+    private $config;
     private $maxExitWaitTime = 3;
 
     /**
@@ -38,22 +38,21 @@ abstract class AbstractProcess
     {
         $arg1 = array_shift($args);
         if($arg1 instanceof Config){
-            $processName = $arg1->getProcessName();
-            $arg = $arg1->getArg();
-            $pipeType = $arg1->getPipeType();
-            $redirectStdinStdout = $arg1->isRedirectStdinStdout();
-            $enableCoroutine = $arg1->isEnableCoroutine();
+            $this->config = $arg1;
         }else{
-            $processName = $arg1;
+            $this->config = new Config();
+            $this->config->setProcessName($arg1);
             $arg = array_shift($args);
+            $this->config->setArg($arg);
             $redirectStdinStdout = (bool)array_shift($args) ?: false;
+            $this->config->setRedirectStdinStdout($redirectStdinStdout);
             $pipeType = array_shift($args);
             $pipeType = $pipeType === null ? Config::PIPE_TYPE_SOCK_DGRAM : $pipeType;
+            $this->config->setPipeType($pipeType);
             $enableCoroutine = (bool)array_shift($args) ?: false;
+            $this->config->setEnableCoroutine($enableCoroutine);
         }
-        $this->arg = $arg;
-        $this->processName = $processName;
-        $this->swooleProcess = new \swoole_process([$this,'__start'],$redirectStdinStdout,$pipeType,$enableCoroutine);
+        $this->swooleProcess = new \swoole_process([$this,'__start'],$this->config->isRedirectStdinStdout(),$this->config->getPipeType(),$this->config->isEnableCoroutine());
     }
 
     public function getProcess():Process
@@ -92,7 +91,7 @@ abstract class AbstractProcess
 
     function __start(Process $process)
     {
-        if(PHP_OS != 'Darwin' && !empty($this->processName)){
+        if(PHP_OS != 'Darwin' && !empty($this->getProcessName())){
             $process->name($this->getProcessName());
         }
 
@@ -133,11 +132,20 @@ abstract class AbstractProcess
             });
         });
         swoole_event_add($this->swooleProcess->pipe, function(){
-            $msg = $this->swooleProcess->read(64 * 1024);
-            $this->onReceive($msg);
+            if($this->config->getPipeType() == Config::PIPE_TYPE_SOCK_DGRAM){
+                $msg = $this->swooleProcess->read();
+            }else{
+                $msg = $this->swooleProcess->read($this->config->getPipeReadSize());
+            }
+            if(is_string($msg)){
+                $this->onReceive($msg);
+            }else{
+                $ex = new Exception('read from pipe error at process '.static::class);
+                $this->onException($ex);
+            }
         });
         try{
-            $this->run($this->arg);
+            $this->run($this->config->getArg());
         }catch (\Throwable $throwable){
             $this->onException($throwable);
         }
@@ -145,12 +153,12 @@ abstract class AbstractProcess
 
     public function getArg()
     {
-        return $this->arg;
+        return $this->config->getArg();
     }
 
     public function getProcessName()
     {
-        return $this->processName;
+        return $this->config->getProcessName();
     }
 
     protected function onException(\Throwable $throwable){
