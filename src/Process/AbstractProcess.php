@@ -25,8 +25,32 @@ abstract class AbstractProcess
         $this->maxExitWaitTime = $maxExitWaitTime;
     }
 
-    final function __construct(string $processName,$arg = null,$redirectStdinStdout = false,$pipeType = 2,$enableCoroutine = false)
+
+    /**
+     * AbstractProcess constructor.
+     * @param string $processName
+     * @param null $arg
+     * @param bool $redirectStdinStdout
+     * @param int $pipeType
+     * @param bool $enableCoroutine
+     */
+    function __construct(...$args)
     {
+        $arg1 = array_shift($args);
+        if($arg1 instanceof Config){
+            $processName = $arg1->getProcessName();
+            $arg = $arg1->getArg();
+            $pipeType = $arg1->getPipeType();
+            $redirectStdinStdout = $arg1->isRedirectStdinStdout();
+            $enableCoroutine = $arg1->isEnableCoroutine();
+        }else{
+            $processName = $arg1;
+            $arg = array_shift($args);
+            $redirectStdinStdout = (bool)array_shift($args) ?: false;
+            $pipeType = array_shift($args);
+            $pipeType = $pipeType === null ? Config::PIPE_TYPE_SOCK_DGRAM : $pipeType;
+            $enableCoroutine = (bool)array_shift($args) ?: false;
+        }
         $this->arg = $arg;
         $this->processName = $processName;
         $this->swooleProcess = new \swoole_process([$this,'__start'],$redirectStdinStdout,$pipeType,$enableCoroutine);
@@ -37,9 +61,6 @@ abstract class AbstractProcess
         return $this->swooleProcess;
     }
 
-    /*
-     * 仅仅为了提示:在自定义进程中依旧可以使用定时器
-     */
     public function addTick($ms,callable $call):?int
     {
         return Timer::getInstance()->loop(
@@ -71,7 +92,7 @@ abstract class AbstractProcess
 
     function __start(Process $process)
     {
-        if(PHP_OS != 'Darwin'){
+        if(PHP_OS != 'Darwin' && !empty($this->processName)){
             $process->name($this->getProcessName());
         }
 
