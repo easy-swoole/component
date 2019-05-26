@@ -182,7 +182,7 @@ abstract class AbstractPool
     public function keepMin(?int $num = null): int
     {
         if($this->createdNum < $num){
-            $left = $num = $this->createdNum;
+            $left = $num - $this->createdNum;
             while ($left > 0 ){
                 $this->initObject();
                 $left--;
