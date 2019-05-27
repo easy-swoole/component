@@ -133,7 +133,7 @@ abstract class AbstractProcess
         return $this->config->getProcessName();
     }
 
-    public function getConfig():Config
+    protected function getConfig():Config
     {
         return $this->config;
     }

@@ -6,7 +6,7 @@ namespace EasySwoole\Component\Process\Socket;
 
 use EasySwoole\Component\Process\Config;
 
-class UnixConfig extends Config
+class UnixProcessConfig extends Config
 {
     protected $socketFile;
     protected $asyncCallBack = true;

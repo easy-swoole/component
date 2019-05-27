@@ -6,10 +6,10 @@ namespace EasySwoole\Component\Process\Socket;
 
 use EasySwoole\Component\Process\Config;
 
-class TcpConfig extends Config
+class TcpProcessConfig extends Config
 {
     protected $listenAddress = '0.0.0.0';
-    protected $port;
+    protected $listenPort;
     protected $asyncCallBack = true;
 
     /**
@@ -31,19 +31,18 @@ class TcpConfig extends Config
     /**
      * @return mixed
      */
-    public function getPort()
+    public function getListenPort()
     {
-        return $this->port;
+        return $this->listenPort;
     }
 
     /**
-     * @param mixed $port
+     * @param mixed $listenPort
      */
-    public function setPort($port): void
+    public function setListenPort($listenPort): void
     {
-        $this->port = $port;
+        $this->listenPort = $listenPort;
     }
-
     /**
      * @return bool
      */

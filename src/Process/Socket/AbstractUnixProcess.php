@@ -8,32 +8,30 @@ use EasySwoole\Component\Process\AbstractProcess;
 use EasySwoole\Component\Process\Exception;
 use Swoole\Coroutine\Socket;
 
-abstract class AbstractTcp extends AbstractProcess
+abstract class AbstractUnixProcess extends AbstractProcess
 {
-    function __construct(TcpConfig $config)
+    function __construct(UnixProcessConfig $config)
     {
         $config->setEnableCoroutine(true);
-        if(empty($config->getPort())){
-            throw new Exception("listen port empty at class ".static::class);
+        if(empty($config->getSocketFile())){
+            throw new Exception("socket file is empty at class ".static::class);
         }
         parent::__construct($config);
     }
 
     public function run($arg)
     {
-        $socket = new Socket(AF_INET,SOCK_STREAM,0);
-        $socket->setOption(SOL_SOCKET,SO_REUSEPORT,true);
-        $socket->setOption(SOL_SOCKET,SO_REUSEADDR,true);
-        $ret = $socket->bind($arg->getListenAddress(),$arg->getListenPort());
-        if(!$ret){
-            throw new Exception(static::class." bind {$this->getConfig()->getListenAddress()} at {$this->getConfig()->getListenPort()} fail ");
+        if (file_exists($this->getConfig()->getSocketFile()))
+        {
+            unlink($this->getConfig()->getSocketFile());
         }
-        $ret = $socket->listen(2048);
-        if(!$ret){
-            throw new Exception(static::class." listen {$this->getConfig()->getListenAddress()} at {$this->getConfig()->getListenPort()} fail ");
+        $socketServer = new Socket(AF_UNIX,SOCK_STREAM,0);
+        $socketServer->bind($this->getConfig()->getSocketFile());
+        if(!$socketServer->listen(2048)){
+            throw new Exception('listen '.$this->getConfig()->getSocketFile(). ' fail at class '.static::class);
         }
         while (1){
-            $client = $socket->accept(-1);
+            $client = $socketServer->accept(-1);
             if(!$client){
                 return;
             }
