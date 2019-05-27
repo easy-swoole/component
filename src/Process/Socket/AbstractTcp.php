@@ -33,6 +33,9 @@ abstract class AbstractTcp extends AbstractProcess
         }
         while (1){
             $client = $socket->accept(-1);
+            if(!$client){
+                return;
+            }
             if($this->getConfig()->isAsyncCallBack()){
                 go(function ()use($client){
                     try{
