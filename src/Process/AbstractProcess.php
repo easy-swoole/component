@@ -104,16 +104,10 @@ abstract class AbstractProcess
             });
         });
         swoole_event_add($this->swooleProcess->pipe, function(){
-            if($this->config->getPipeType() == Config::PIPE_TYPE_SOCK_DGRAM){
-                $msg = $this->swooleProcess->read();
-            }else{
-                $msg = $this->swooleProcess->read($this->config->getPipeReadSize());
-            }
-            if(is_string($msg)){
-                $this->onReceive($msg);
-            }else{
-                $ex = new Exception('read from pipe error at process '.static::class);
-                $this->onException($ex);
+            try{
+                $this->onPipeReadable($this->swooleProcess);
+            }catch (\Throwable $throwable){
+                $this->onException($throwable);
             }
         });
         try{
@@ -142,7 +136,15 @@ abstract class AbstractProcess
         throw $throwable;
     }
 
-    public abstract function run($arg);
-    public abstract function onShutDown();
-    public abstract function onReceive(string $str);
+    protected abstract function run($arg);
+
+    protected function onShutDown()
+    {
+
+    }
+
+    public function onPipeReadable(Process $process)
+    {
+
+    }
 }
