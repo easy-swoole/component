@@ -138,7 +138,7 @@ abstract class AbstractProcess
         return $this->config;
     }
 
-    protected function onException(\Throwable $throwable){
+    protected function onException(\Throwable $throwable,...$args){
         throw $throwable;
     }
 

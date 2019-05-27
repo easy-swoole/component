@@ -34,12 +34,22 @@ abstract class AbstractTcp extends AbstractProcess
         while (1){
             $client = $socket->accept(-1);
             if($this->getConfig()->isAsyncCallBack()){
-
+                go(function ()use($client){
+                    try{
+                        $this->onAccept($client);
+                    }catch (\Throwable $throwable){
+                        $this->onException($throwable,$client);
+                    }
+                });
             }else{
-
+                try{
+                    $this->onAccept($client);
+                }catch (\Throwable $throwable){
+                    $this->onException($throwable,$client);
+                }
             }
         }
     }
 
-    abstract function onMessage(string $message,Socket $socket);
+    abstract function onAccept(Socket $socket);
 }
