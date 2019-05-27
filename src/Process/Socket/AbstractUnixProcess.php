@@ -35,7 +35,7 @@ abstract class AbstractUnixProcess extends AbstractProcess
             if(!$client){
                 return;
             }
-            if($this->getConfig()->isAsyncCallBack()){
+            if($this->getConfig()->isAsyncCallback()){
                 go(function ()use($client){
                     try{
                         $this->onAccept($client);

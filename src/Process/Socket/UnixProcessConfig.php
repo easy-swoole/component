@@ -9,7 +9,7 @@ use EasySwoole\Component\Process\Config;
 class UnixProcessConfig extends Config
 {
     protected $socketFile;
-    protected $asyncCallBack = true;
+    protected $asyncCallback = true;
 
     /**
      * @return mixed
@@ -30,16 +30,16 @@ class UnixProcessConfig extends Config
     /**
      * @return bool
      */
-    public function isAsyncCallBack(): bool
+    public function isAsyncCallback(): bool
     {
-        return $this->asyncCallBack;
+        return $this->asyncCallback;
     }
 
     /**
-     * @param bool $asyncCallBack
+     * @param bool $asyncCallback
      */
-    public function setAsyncCallBack(bool $asyncCallBack): void
+    public function setAsyncCallback(bool $asyncCallback): void
     {
-        $this->asyncCallBack = $asyncCallBack;
+        $this->asyncCallback = $asyncCallback;
     }
 }
