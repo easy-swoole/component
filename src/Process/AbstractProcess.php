@@ -145,6 +145,10 @@ abstract class AbstractProcess
 
     public function onPipeReadable(Process $process)
     {
-
+        /*
+         * 由于Swoole底层使用了epoll的LT模式，因此swoole_event_add添加的事件监听，
+         * 在事件发生后回调函数中必须调用read方法读取socket中的数据，否则底层会持续触发事件回调。
+         */
+        $process->read();
     }
 }
