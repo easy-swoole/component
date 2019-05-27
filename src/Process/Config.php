@@ -18,6 +18,7 @@ class Config extends SplBean
     protected $pipeType = self::PIPE_TYPE_SOCK_DGRAM;
     protected $enableCoroutine = false;
     protected $pipeReadSize = 2;
+    protected $maxExitWaitTime = 3;
 
     /**
      * @return mixed
@@ -114,4 +115,21 @@ class Config extends SplBean
     {
         $this->pipeReadSize = $pipeReadSize;
     }
+
+    /**
+     * @return int
+     */
+    public function getMaxExitWaitTime(): int
+    {
+        return $this->maxExitWaitTime;
+    }
+
+    /**
+     * @param int $maxExitWaitTime
+     */
+    public function setMaxExitWaitTime(int $maxExitWaitTime): void
+    {
+        $this->maxExitWaitTime = $maxExitWaitTime;
+    }
+
 }

@@ -7,6 +7,7 @@
  */
 
 namespace EasySwoole\Component\Process;
+use Co\Channel;
 use EasySwoole\Component\Timer;
 use Swoole\Process;
 
@@ -15,15 +16,6 @@ abstract class AbstractProcess
     private $swooleProcess;
     /** @var Config */
     private $config;
-    private $maxExitWaitTime = 3;
-
-    /**
-     * @param int $maxExitWaitTime
-     */
-    public function setMaxExitWaitTime(int $maxExitWaitTime): void
-    {
-        $this->maxExitWaitTime = $maxExitWaitTime;
-    }
 
 
     /**
@@ -97,37 +89,18 @@ abstract class AbstractProcess
 
         Process::signal(SIGTERM,function ()use($process){
             go(function ()use($process){
-                $new = iterator_to_array(\co::listCoroutines());
-                try{
-                    $this->onShutDown();
-                }catch (\Throwable $throwable){
-                    $this->onException($throwable);
-                }
                 swoole_event_del($process->pipe);
+                $channel = new Channel(8);
+                go(function ()use($channel){
+                    try{
+                        $channel->push($this->onShutDown());
+                    }catch (\Throwable $throwable){
+                        $this->onException($throwable);
+                    }
+                });
+                $channel->pop($this->config->getMaxExitWaitTime());
+                swoole_event_exit();
                 Process::signal(SIGTERM,null);
-                $old = iterator_to_array(\co::listCoroutines());
-                $diff = array_diff($old,$new);
-                if(empty($diff)){
-                    $this->getProcess()->exit(0);
-                    return;
-                }
-                $t = $this->maxExitWaitTime;
-                while($t > 0){
-                    $exit = true;
-                    foreach ($diff as $cid){
-                        if(\co::getBackTrace($cid,DEBUG_BACKTRACE_PROVIDE_OBJECT|DEBUG_BACKTRACE_IGNORE_ARGS,1) == false){
-                            $exit = true;
-                        }else{
-                            $exit = false;
-                            continue;
-                        }
-                    }
-                    if($exit){
-                        break;
-                    }
-                    \co::sleep(0.01);
-                    $t = $t - 0.01;
-                }
                 $this->getProcess()->exit(0);
             });
         });
