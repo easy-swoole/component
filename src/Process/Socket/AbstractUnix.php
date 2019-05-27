@@ -12,6 +12,7 @@ abstract class AbstractUnix extends AbstractProcess
 {
     function __construct(UnixConfig $config)
     {
+        $config->setEnableCoroutine(true);
         if(empty($config->getSocketFile())){
             throw new Exception("socket file is empty at class ".static::class);
         }

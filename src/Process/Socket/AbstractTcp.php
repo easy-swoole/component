@@ -12,6 +12,7 @@ abstract class AbstractTcp extends AbstractProcess
 {
     function __construct(TcpConfig $config)
     {
+        $config->setEnableCoroutine(true);
         if(empty($config->getPort())){
             throw new Exception("listen port empty at class ".static::class);
         }
