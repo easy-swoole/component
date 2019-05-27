@@ -86,7 +86,6 @@ abstract class AbstractProcess
         if(PHP_OS != 'Darwin' && !empty($this->getProcessName())){
             $process->name($this->getProcessName());
         }
-
         Process::signal(SIGTERM,function ()use($process){
             go(function ()use($process){
                 swoole_event_del($process->pipe);
@@ -132,6 +131,11 @@ abstract class AbstractProcess
     public function getProcessName()
     {
         return $this->config->getProcessName();
+    }
+
+    public function getConfig():Config
+    {
+        return $this->config;
     }
 
     protected function onException(\Throwable $throwable){
