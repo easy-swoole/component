@@ -66,7 +66,7 @@ class PoolManager
             protected function createObject()
             {
                 // TODO: Implement createObject() method.
-                return call_user_func($this->call);
+                return call_user_func($this->call,$this->getConfig());
             }
         }';
         $file = sys_get_temp_dir()."/{$class}.php";
