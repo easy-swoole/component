@@ -21,7 +21,6 @@ class PoolManager
     private $defaultConfig;
     private $anonymousMap = [];
 
-
     function __construct()
     {
         $this->defaultConfig = new PoolConf();
@@ -50,6 +49,11 @@ class PoolManager
 
     function registerAnonymous(string $name,?callable $createCall = null)
     {
+        // 拒绝相同名称的池重复注册
+        if (isset($this->pool[$name])) {
+            return false;
+        }
+        
         /*
          * 绕过去实现动态class
          */
