@@ -51,7 +51,7 @@ class PoolManager
     {
         // 拒绝相同名称的池重复注册
         if (isset($this->pool[$name])) {
-            return false;
+            return true;
         }
         
         /*
