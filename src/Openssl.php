@@ -18,6 +18,7 @@ class Openssl
     {
         $this->key = $key;
         $this->method = $method;
+        trigger_error(static::class." is deprecated ,use ".'EasySwoole\Component\Crypto instead',E_USER_DEPRECATED);
     }
 
     public function encrypt(string $data)
