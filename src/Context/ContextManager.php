@@ -88,7 +88,7 @@ class ContextManager
     {
         if($cid === null){
             $cid = Coroutine::getUid();
-            if(!isset($this->deferList[$cid])){
+            if(!isset($this->deferList[$cid]) && $cid > 0){
                 $this->deferList[$cid] = true;
                 defer(function ()use($cid){
                     unset($this->deferList[$cid]);
