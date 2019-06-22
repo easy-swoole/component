@@ -52,7 +52,7 @@ abstract class AbstractPool
             $hash = $obj->__objHash;
             //标记为在pool内
             $this->objHash[$hash] = true;
-            if($obj instanceof AbstractPoolObject){
+            if($obj instanceof PoolObjectInterface){
                 try{
                     $obj->objectRestore();
                 }catch (\Throwable $throwable){
@@ -92,7 +92,7 @@ abstract class AbstractPool
         }
         $object = $this->poolChannel->pop($timeout);
         if(is_object($object)){
-            if($object instanceof AbstractPoolObject){
+            if($object instanceof PoolObjectInterface){
                 try{
                     if($object->beforeUse() === false){
                         $this->unsetObj($object);
@@ -131,7 +131,7 @@ abstract class AbstractPool
         if($this->isPoolObject($obj) && (!$this->isInPool($obj))){
             $hash = $obj->__objHash;
             unset($this->objHash[$hash]);
-            if($obj instanceof AbstractPoolObject){
+            if($obj instanceof PoolObjectInterface){
                 try{
                     $obj->gc();
                 }catch (\Throwable $throwable){
