@@ -32,8 +32,11 @@ class WaitGroup
         $this->chan->push(1);
     }
 
-    public function wait(float $timeout = 15)
+    public function wait(?float $timeout = 15)
     {
+        if($timeout <= 0){
+            $timeout = PHP_INT_MAX;
+        }
         $this->success = 0;
         $left = $timeout;
         while(($this->count > 0) && ($left > 0))

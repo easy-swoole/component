@@ -31,8 +31,11 @@ class Csp
         return $this->success;
     }
 
-    function exec(float $timeout = 5)
+    function exec(?float $timeout = 5)
     {
+        if($timeout <= 0){
+            $timeout = PHP_INT_MAX;
+        }
         $this->count = count($this->task);
         foreach ($this->task as $key => $call){
             go(function ()use($key,$call){
