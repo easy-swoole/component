@@ -12,6 +12,7 @@ namespace EasySwoole\Component\Pool;
 use EasySwoole\Component\Pool\Exception\PoolObjectNumError;
 use EasySwoole\Utility\Random;
 use Swoole\Coroutine\Channel;
+use Swoole\Timer;
 
 abstract class AbstractPool
 {
@@ -36,7 +37,7 @@ abstract class AbstractPool
         $this->conf = $conf;
         $this->poolChannel = new Channel($conf->getMaxObjectNum() + 8);
         if ($conf->getIntervalCheckTime() > 0) {
-            swoole_timer_tick($conf->getIntervalCheckTime(), [$this, 'intervalCheck']);
+            Timer::tick($conf->getIntervalCheckTime(), [$this, 'intervalCheck']);
         }
     }
 
