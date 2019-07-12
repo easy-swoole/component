@@ -87,6 +87,10 @@ abstract class AbstractProcess
             $process->name($this->getProcessName());
         }
         Process::signal(SIGTERM,function ()use($process){
+            /*
+             * 清除全部定时器
+             */
+            Timer::getInstance()->clearAll();
             go(function ()use($process){
                 swoole_event_del($process->pipe);
                 $channel = new Channel(8);
