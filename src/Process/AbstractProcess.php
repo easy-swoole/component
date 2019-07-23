@@ -7,9 +7,10 @@
  */
 
 namespace EasySwoole\Component\Process;
-use Co\Channel;
 use EasySwoole\Component\Timer;
+use Swoole\Event;
 use Swoole\Process;
+use Swoole\Coroutine\Scheduler;
 
 abstract class AbstractProcess
 {
@@ -83,30 +84,16 @@ abstract class AbstractProcess
 
     function __start(Process $process)
     {
+        /*
+         * swoole自定义进程协程与非协程的兼容
+         * 开一个协程，让进程推出的时候，执行清理reactor
+         */
+        go(function (){
+
+        });
         if(PHP_OS != 'Darwin' && !empty($this->getProcessName())){
             $process->name($this->getProcessName());
         }
-        Process::signal(SIGTERM,function ()use($process){
-            /*
-             * 清除全部定时器
-             */
-            Timer::getInstance()->clearAll();
-            go(function ()use($process){
-                swoole_event_del($process->pipe);
-                $channel = new Channel(8);
-                go(function ()use($channel){
-                    try{
-                        $channel->push($this->onShutDown());
-                    }catch (\Throwable $throwable){
-                        $this->onException($throwable);
-                    }
-                });
-                $channel->pop($this->config->getMaxExitWaitTime());
-                swoole_event_exit();
-                Process::signal(SIGTERM,null);
-                $this->getProcess()->exit(0);
-            });
-        });
         swoole_event_add($this->swooleProcess->pipe, function(){
             try{
                 $this->onPipeReadable($this->swooleProcess);
@@ -114,6 +101,27 @@ abstract class AbstractProcess
                 $this->onException($throwable);
             }
         });
+        Process::signal(SIGTERM,function ()use($process){
+            /*
+             * 清除全部定时器
+             */
+            Timer::getInstance()->clearAll();
+            Process::signal(SIGTERM, null);
+            Event::exit();
+        });
+        register_shutdown_function(function () {
+            $schedule = new Scheduler();
+            $schedule->add(function (){
+                try{
+                    $this->onShutDown();
+                }catch (\Throwable $throwable){
+                    $this->onException($throwable);
+                }
+                Timer::getInstance()->clearAll();
+            });
+            $schedule->start();
+        });
+
         try{
             $this->run($this->config->getArg());
         }catch (\Throwable $throwable){

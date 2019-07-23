@@ -46,7 +46,7 @@ class Runner
             if($this->runningNum < $this->concurrency && !$this->taskChannel->isEmpty()){
                 $task = $this->taskChannel->pop(0.01);
                 if($task instanceof Task){
-                    go(function ()use($task){
+                    Coroutine::create(function ()use($task){
                         $this->runningNum++;
                         $ret = null;
                         try{

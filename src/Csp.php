@@ -5,6 +5,7 @@ namespace EasySwoole\Component;
 
 
 use Swoole\Coroutine\Channel;
+use Swoole\Coroutine;
 
 class Csp
 {
@@ -38,7 +39,7 @@ class Csp
         }
         $this->count = count($this->task);
         foreach ($this->task as $key => $call){
-            go(function ()use($key,$call){
+            Coroutine::create(function ()use($key,$call){
                 $this->chan->push([
                     'key'=>$key,
                     'result'=>call_user_func($call)
