@@ -35,6 +35,7 @@ class Timer
         }
         if($tid && SWTimer::info($tid)){
             SWTimer::clear($tid);
+            return true;
         }
         return false;
     }
