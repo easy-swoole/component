@@ -15,9 +15,9 @@ class Timer
 
     protected $timerMap = [];
 
-    function loop(int $ms, callable $callback, $name = null): int
+    function loop(int $ms, callable $callback, $name = null, ...$params): int
     {
-        $id = SWTimer::tick($ms, $callback);
+        $id = SWTimer::tick($ms, $callback, ...$params);
         if ($name !== null) {
             $this->timerMap[md5($name)] = $id;
         }
@@ -47,9 +47,9 @@ class Timer
         return true;
     }
 
-    function after(int $ms, callable $callback): int
+    function after(int $ms, callable $callback, ...$params): int
     {
-        return SWTimer::after($ms, $callback);
+        return SWTimer::after($ms, $callback, ...$params);
     }
 
     function list():array 
