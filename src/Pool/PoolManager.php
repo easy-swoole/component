@@ -18,6 +18,7 @@ class PoolManager
     use Singleton;
 
     private $poolRegister = [];
+    private $pool = [];
     private $defaultConfig;
     private $anonymousMap = [];
 
@@ -53,7 +54,6 @@ class PoolManager
         if (isset($this->poolRegister[$name])) {
             return true;
         }
-        
         /*
          * 绕过去实现动态class
          */
@@ -101,6 +101,9 @@ class PoolManager
         if(isset($this->anonymousMap[$key])){
             $key = $this->anonymousMap[$key];
         }
+        if(isset($this->pool[$key])){
+            return  $this->pool[$key];
+        }
         if(isset($this->poolRegister[$key])){
             $item = $this->poolRegister[$key];
             if($item instanceof AbstractPool){
@@ -109,12 +112,12 @@ class PoolManager
                 $class = $item['class'];
                 if(isset($item['config'])){
                     $obj = new $class($item['config']);
-                    $this->poolRegister[$key] = $obj;
+                    $this->pool[$key] = $obj;
                 }else{
                     $config = clone $this->defaultConfig;
                     $createCall = $item['call'];
                     $obj = new $class($config,$createCall);
-                    $this->poolRegister[$key] = $obj;
+                    $this->pool[$key] = $obj;
                     $this->anonymousMap[get_class($obj)] = $key;
                 }
                 return $this->getPool($key);
@@ -136,8 +139,9 @@ class PoolManager
         }
     }
 
-    public function clear()
+    public function clear():PoolManager
     {
-
+        $this->pool = [];
+        return $this;
     }
 }
