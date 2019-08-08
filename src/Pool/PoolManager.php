@@ -139,7 +139,7 @@ class PoolManager
         }
     }
 
-    public function clear():PoolManager
+    public function clearPool():PoolManager
     {
         $this->pool = [];
         return $this;
