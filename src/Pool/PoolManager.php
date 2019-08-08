@@ -102,7 +102,7 @@ class PoolManager
             $key = $this->anonymousMap[$key];
         }
         if(isset($this->pool[$key])){
-            return  $this->pool[$key];
+            return $this->pool[$key];
         }
         if(isset($this->poolRegister[$key])){
             $item = $this->poolRegister[$key];
@@ -113,12 +113,14 @@ class PoolManager
                 if(isset($item['config'])){
                     $obj = new $class($item['config']);
                     $this->pool[$key] = $obj;
-                }else{
+                }else if(isset($item['call'])){
                     $config = clone $this->defaultConfig;
                     $createCall = $item['call'];
                     $obj = new $class($config,$createCall);
                     $this->pool[$key] = $obj;
                     $this->anonymousMap[get_class($obj)] = $key;
+                }else{
+                    return null;
                 }
                 return $this->getPool($key);
             }
