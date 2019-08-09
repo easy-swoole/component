@@ -20,6 +20,7 @@ abstract class AbstractProcess
 
 
     /**
+     * name  args  false 2 true
      * AbstractProcess constructor.
      * @param string $processName
      * @param null $arg
@@ -102,6 +103,7 @@ abstract class AbstractProcess
             }
         });
         Process::signal(SIGTERM,function ()use($process){
+            swoole_event_del($process->pipe);
             /*
              * 清除全部定时器
              */
