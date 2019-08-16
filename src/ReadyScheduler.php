@@ -77,6 +77,8 @@ class ReadyScheduler
     {
         if(!is_array($keys)){
             $keys = [$keys];
+        }else if(empty($keys)){
+            return true;
         }
         while (1){
             foreach ($keys as $key => $item){
@@ -92,6 +94,27 @@ class ReadyScheduler
                 }else{
                     return false;
                 }
+            }
+        }
+        return true;
+    }
+
+    function waitAnyReady(array $keys,float $timeout = 3.0):bool
+    {
+        if(empty($keys)){
+            return true;
+        }
+        while (1){
+            foreach ($keys as $key){
+                if($this->status($key) >= self::STATUS_READY){
+                    return true;
+                }
+            }
+            if($timeout > 0){
+                $timeout = $timeout - 0.01;
+                Coroutine::sleep(0.01);
+            }else{
+                return false;
             }
         }
         return true;
