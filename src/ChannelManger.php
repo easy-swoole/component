@@ -11,7 +11,7 @@ namespace EasySwoole\Component;
 
 use Swoole\Coroutine\Channel;
 
-class CoChannelManger
+class ChannelManger
 {
     use Singleton;
     private $list = [];

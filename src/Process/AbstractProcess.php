@@ -8,6 +8,7 @@
 
 namespace EasySwoole\Component\Process;
 use EasySwoole\Component\Timer;
+use Swoole\Coroutine;
 use Swoole\Event;
 use Swoole\Process;
 use Swoole\Coroutine\Scheduler;
@@ -89,7 +90,7 @@ abstract class AbstractProcess
          * swoole自定义进程协程与非协程的兼容
          * 开一个协程，让进程推出的时候，执行清理reactor
          */
-        go(function (){
+        Coroutine::create(function (){
 
         });
         if(PHP_OS != 'Darwin' && !empty($this->getProcessName())){
