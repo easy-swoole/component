@@ -22,6 +22,8 @@ abstract class AbstractPool
     private $poolChannel;
     private $objHash = [];
     private $conf;
+    private $timerId;
+    private $destroy = false;
 
     /*
      * 如果成功创建了,请返回对应的obj
@@ -37,7 +39,7 @@ abstract class AbstractPool
         $this->conf = $conf;
         $this->poolChannel = new Channel($conf->getMaxObjectNum() + 8);
         if ($conf->getIntervalCheckTime() > 0) {
-            Timer::tick($conf->getIntervalCheckTime(), [$this, 'intervalCheck']);
+            $this->timerId = Timer::tick($conf->getIntervalCheckTime(), [$this, 'intervalCheck']);
         }
     }
 
@@ -46,6 +48,10 @@ abstract class AbstractPool
      */
     public function recycleObj($obj): bool
     {
+        if($this->destroy){
+            $this->unsetObj($obj);
+            return true;
+        }
         /*
          * 仅仅允许归属于本pool且不在pool内的对象进行回收
          */
@@ -75,6 +81,9 @@ abstract class AbstractPool
      */
     public function getObj(float $timeout = null, int $tryTimes = 3)
     {
+        if($this->destroy){
+            return null;
+        }
         if($timeout === null){
             $timeout = $this->getConfig()->getGetObjectTimeout();
         }
@@ -152,7 +161,7 @@ abstract class AbstractPool
     /*
      * 超过$idleTime未出队使用的，将会被回收。
      */
-    public function gcObject(int $idleTime)
+    public function idleCheck(int $idleTime)
     {
         $list = [];
         while (!$this->poolChannel->isEmpty()){
@@ -176,7 +185,7 @@ abstract class AbstractPool
      */
     public function intervalCheck()
     {
-        $this->gcObject($this->getConfig()->getMaxIdleTime());
+        $this->idleCheck($this->getConfig()->getMaxIdleTime());
         $this->keepMin($this->getConfig()->getMinObjectNum());
     }
 
@@ -259,6 +268,19 @@ abstract class AbstractPool
             return $this->objHash[$obj->__objHash];
         }else{
             return false;
+        }
+    }
+
+    function destroyPool()
+    {
+        $this->destroy = true;
+        if($this->timerId && Timer::exists($this->timerId)){
+            Timer::clear($this->timerId);
+            $this->timerId = null;
+        }
+        while (!$this->poolChannel->isEmpty()){
+            $item = $this->poolChannel->pop(0.01);
+            $this->unsetObj($item);
         }
     }
 

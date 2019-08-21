@@ -143,7 +143,11 @@ class PoolManager
 
     public function clearPool():PoolManager
     {
-        $this->pool = [];
+        foreach ($this->pool as $key => $pool){
+            /**@var AbstractPool $pool*/
+            $pool->destroyPool();
+            unset($this->pool[$key]);
+        }
         return $this;
     }
 }
