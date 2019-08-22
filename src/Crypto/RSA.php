@@ -123,6 +123,7 @@ class RSA
                     $str = chunk_split($key, 64, "\n");
                     $key = "-----BEGIN PUBLIC KEY-----\n$str-----END PUBLIC KEY-----\n";
                 }
+                break;
         }
         return $key;
     }
