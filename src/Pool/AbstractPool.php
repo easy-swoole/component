@@ -9,15 +9,23 @@
 namespace EasySwoole\Component\Pool;
 
 
+use EasySwoole\Component\Context\ContextManager;
+use EasySwoole\Component\Pool\Exception\PoolEmpty;
+use EasySwoole\Component\Pool\Exception\PoolException;
 use EasySwoole\Component\Pool\Exception\PoolObjectNumError;
 use EasySwoole\Utility\Random;
 use Swoole\Coroutine\Channel;
 use Swoole\Timer;
+use Swoole\Coroutine;
 
+/**
+ * Class AbstractPool
+ * @package EasySwoole\Component\Pool
+ * @method invoker(callable $call,float $timeout = null);
+ * @method defer($timeout = null);
+ */
 abstract class AbstractPool
 {
-    use TraitInvoker;
-
     private $createdNum = 0;
     private $poolChannel;
     private $objHash = [];
@@ -284,4 +292,107 @@ abstract class AbstractPool
         }
     }
 
+    public static function __callStatic($name, $arguments)
+    {
+        switch ($name){
+            case 'invoke':{
+                $call = $arguments[0];
+                $timeout = $arguments[1];
+                $pool = PoolManager::getInstance()->getPool(static::class);
+                if($pool instanceof AbstractPool){
+                    $obj = $pool->getObj($timeout);
+                    if($obj){
+                        try{
+                            $ret = call_user_func($call,$obj);
+                            return $ret;
+                        }catch (\Throwable $throwable){
+                            throw $throwable;
+                        }finally{
+                            $pool->recycleObj($obj);
+                        }
+                    }else{
+                        throw new PoolEmpty(static::class." pool is empty");
+                    }
+                }else{
+                    throw new PoolException(static::class." convert to pool error");
+                }
+                break;
+            }
+            case 'defer':{
+                $timeout = $arguments[0];
+                $key = md5(static::class);
+                $obj = ContextManager::getInstance()->get($key);
+                if($obj){
+                    return $obj;
+                }else{
+                    $pool = PoolManager::getInstance()->getPool(static::class);
+                    if($pool instanceof AbstractPool){
+                        $obj = $pool->getObj($timeout);
+                        if($obj){
+                            Coroutine::defer(function ()use($pool,$obj){
+                                $pool->recycleObj($obj);
+                            });
+                            ContextManager::getInstance()->set($key,$obj);
+                            return $obj;
+                        }else{
+                            throw new PoolEmpty(static::class." pool is empty");
+                        }
+                    }else{
+                        throw new PoolException(static::class." convert to pool error");
+                    }
+                }
+                break;
+            }
+            default:{
+                throw new PoolException(" function {$name} not exist in class ".static::class);
+            }
+        }
+    }
+
+    public function __call($name, $arguments)
+    {
+        switch ($name){
+            case 'invoke':{
+                $call = $arguments[0];
+                $timeout = $arguments[1];
+                $obj = $this->getObj($timeout);
+                if($obj){
+                    try{
+                        $ret = call_user_func($call,$obj);
+                        return $ret;
+                    }catch (\Throwable $throwable){
+                        throw $throwable;
+                    }finally{
+                        $this->recycleObj($obj);
+                    }
+                }else{
+                    throw new PoolEmpty(static::class." pool is empty");
+                }
+                break;
+            }
+            case 'defer':{
+                $timeout = $arguments[0];
+                $key = spl_object_hash($this);
+                $obj = ContextManager::getInstance()->get($key);
+                if($obj){
+                    return $obj;
+                }else{
+                    $obj = $this->getObj($timeout);
+                    if($obj){
+                        Coroutine::defer(function ()use($obj){
+                            $this->recycleObj($obj);
+                        });
+                        ContextManager::getInstance()->set($key,$obj);
+                        return $obj;
+                    }else{
+                        throw new PoolEmpty(static::class." pool is empty");
+                    }
+                }
+                break;
+            }
+            default:{
+                throw new PoolException(" function {$name} not exist in class ".static::class);
+            }
+        }
+    }
 }
