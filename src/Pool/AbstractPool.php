@@ -64,6 +64,14 @@ abstract class AbstractPool
          * 仅仅允许归属于本pool且不在pool内的对象进行回收
          */
         if($this->isPoolObject($obj) && (!$this->isInPool($obj))){
+            /*
+           * 主动回收可能存在的上下文
+           */
+            $key = spl_object_hash($this);
+            ContextManager::getInstance()->unset($key);
+            $key = md5(static::class);
+            ContextManager::getInstance()->unset($key);
+
             $hash = $obj->__objHash;
             //标记为在pool内
             $this->objHash[$hash] = true;
@@ -147,6 +155,13 @@ abstract class AbstractPool
     public function unsetObj($obj): bool
     {
         if($this->isPoolObject($obj) && (!$this->isInPool($obj))){
+            /*
+             * 主动回收可能存在的上下文
+             */
+            $key = spl_object_hash($this);
+            ContextManager::getInstance()->unset($key);
+            $key = md5(static::class);
+            ContextManager::getInstance()->unset($key);
             $hash = $obj->__objHash;
             unset($this->objHash[$hash]);
             if($obj instanceof PoolObjectInterface){
