@@ -47,7 +47,7 @@ abstract class AbstractProcess
             $enableCoroutine = (bool)array_shift($args) ?: false;
             $this->config->setEnableCoroutine($enableCoroutine);
         }
-        $this->swooleProcess = new \swoole_process([$this,'__start'],$this->config->isRedirectStdinStdout(),$this->config->getPipeType(),$this->config->isEnableCoroutine());
+        $this->swooleProcess = new Process([$this,'__start'],$this->config->isRedirectStdinStdout(),$this->config->getPipeType(),$this->config->isEnableCoroutine());
     }
 
     public function getProcess():Process
@@ -108,7 +108,7 @@ abstract class AbstractProcess
             /*
              * 清除全部定时器
              */
-            Timer::getInstance()->clearAll();
+            \Swoole\Timer::clearAll();
             Process::signal(SIGTERM, null);
             Event::exit();
         });
@@ -120,7 +120,7 @@ abstract class AbstractProcess
                 }catch (\Throwable $throwable){
                     $this->onException($throwable);
                 }
-                Timer::getInstance()->clearAll();
+                \Swoole\Timer::clearAll();
             });
             $schedule->start();
         });
