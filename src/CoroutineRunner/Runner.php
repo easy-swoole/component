@@ -49,14 +49,15 @@ class Runner
                     Coroutine::create(function ()use($task){
                         $this->runningNum++;
                         $ret = null;
+                        $task->setStartTime(microtime(true));
                         try{
                             $ret = call_user_func($task->getCall());
                             if($ret !== null && is_callable($task->getOnSuccess())){
-                                call_user_func($task->getOnSuccess(),$ret);
+                                call_user_func($task->getOnSuccess(),$ret,$task);
                             }
                         }catch (\Throwable $throwable){
                             if(is_callable($task->getOnFail())){
-                                call_user_func($task->getOnFail(),$ret);
+                                call_user_func($task->getOnFail(),$ret,$task);
                             }
                         }finally{
                             $this->runningNum--;

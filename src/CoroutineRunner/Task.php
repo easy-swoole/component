@@ -14,6 +14,9 @@ class Task
     /** @var callable */
     protected $onFail;
 
+    /** @var float */
+    protected $startTime;
+
     function __construct(callable $call)
     {
         $this->call = $call;
@@ -82,4 +85,21 @@ class Task
     {
         $this->onFail = $onFail;
     }
+
+    /**
+     * @return float
+     */
+    public function getStartTime(): float
+    {
+        return $this->startTime;
+    }
+
+    /**
+     * @param float $startTime
+     */
+    public function setStartTime(float $startTime): void
+    {
+        $this->startTime = $startTime;
+    }
+
 }
