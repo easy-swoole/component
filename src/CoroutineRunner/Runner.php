@@ -21,6 +21,12 @@ class Runner
         $this->taskChannel = new Channel($taskChannelSize);
     }
 
+    function setOnException(callable $call)
+    {
+        $this->onException = $call;
+        return $this;
+    }
+
     function status()
     {
         return [
@@ -62,6 +68,8 @@ class Runner
                         }catch (\Throwable $throwable){
                             if(is_callable($this->onException)){
                                 call_user_func($this->onException,$throwable,$task);
+                            }else{
+                                throw $throwable;
                             }
                         }finally{
                             $this->runningNum--;
