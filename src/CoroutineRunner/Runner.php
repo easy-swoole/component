@@ -13,6 +13,7 @@ class Runner
     protected $taskChannel;
     protected $isRunning = false;
     protected $runningNum = 0;
+    protected $onException;
 
     function __construct($concurrency = 64,$taskChannelSize = 1024)
     {
@@ -52,12 +53,15 @@ class Runner
                         $task->setStartTime(microtime(true));
                         try{
                             $ret = call_user_func($task->getCall());
-                            if($ret !== null && is_callable($task->getOnSuccess())){
-                                call_user_func($task->getOnSuccess(),$ret,$task);
+                            $task->setResult($ret);
+                            if($ret !== false && is_callable($task->getOnSuccess())){
+                                call_user_func($task->getOnSuccess(),$task);
+                            }else if(is_callable($task->getOnFail())){
+                                call_user_func($task->getOnFail(),$task);
                             }
                         }catch (\Throwable $throwable){
-                            if(is_callable($task->getOnFail())){
-                                call_user_func($task->getOnFail(),$ret,$task);
+                            if(is_callable($this->onException)){
+                                call_user_func($this->onException,$throwable,$task);
                             }
                         }finally{
                             $this->runningNum--;

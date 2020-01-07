@@ -13,9 +13,10 @@ class Task
     protected $onSuccess;
     /** @var callable */
     protected $onFail;
-
     /** @var float */
     protected $startTime;
+
+    protected $result;
 
     function __construct(callable $call)
     {
@@ -102,4 +103,19 @@ class Task
         $this->startTime = $startTime;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getResult()
+    {
+        return $this->result;
+    }
+
+    /**
+     * @param mixed $result
+     */
+    public function setResult($result): void
+    {
+        $this->result = $result;
+    }
 }
