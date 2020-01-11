@@ -40,25 +40,27 @@ class Csp
         $this->count = count($this->task);
         foreach ($this->task as $key => $call){
             Coroutine::create(function ()use($key,$call){
+                $data = call_user_func($call);
                 $this->chan->push([
                     'key'=>$key,
-                    'result'=>call_user_func($call)
+                    'result'=>$data
                 ]);
             });
         }
         $result = [];
-        $left = $timeout;
-        while(($this->count > 0) && ($left > 0))
+        $start = microtime(true);
+        while($this->count > 0)
         {
-            $start = round(microtime(true),3);
-            $temp = $this->chan->pop($left);
+            $temp = $this->chan->pop(1);
             if(is_array($temp)){
                 $key = $temp['key'];
                 $result[$key] = $temp['result'];
                 $this->count--;
                 $this->success++;
             }
-            $left = $left - (round(microtime(true),3) - $start);
+            if(microtime(true) - $start > $timeout){
+                break;
+            }
         }
         return $result;
     }
