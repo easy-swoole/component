@@ -13,6 +13,8 @@ class Config extends SplBean
     const PIPE_TYPE_SOCK_DGRAM = 2;
 
     protected $processName;
+    /** @var string */
+    protected $processGroup = null;
     protected $arg;
     protected $redirectStdinStdout = false;
     protected $pipeType = self::PIPE_TYPE_SOCK_DGRAM;
@@ -115,4 +117,19 @@ class Config extends SplBean
         $this->maxExitWaitTime = $maxExitWaitTime;
     }
 
+    /**
+     * @return string
+     */
+    public function getProcessGroup(): ?string
+    {
+        return $this->processGroup;
+    }
+
+    /**
+     * @param string $processGroup
+     */
+    public function setProcessGroup(string $processGroup): void
+    {
+        $this->processGroup = $processGroup;
+    }
 }

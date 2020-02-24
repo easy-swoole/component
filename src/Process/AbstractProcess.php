@@ -7,6 +7,7 @@
  */
 
 namespace EasySwoole\Component\Process;
+use EasySwoole\Component\TableManager;
 use EasySwoole\Component\Timer;
 use Swoole\Coroutine;
 use Swoole\Event;
@@ -15,6 +16,7 @@ use Swoole\Coroutine\Scheduler;
 
 abstract class AbstractProcess
 {
+    public const PROCESS_TABLE_NAME = '__PROCESS_TABLE_NAME__';
     private $swooleProcess;
     /** @var Config */
     private $config;
@@ -86,6 +88,14 @@ abstract class AbstractProcess
 
     function __start(Process $process)
     {
+        $table = TableManager::getInstance()->get(static::PROCESS_TABLE_NAME);
+        if($table){
+            $table->set($process->pid,[
+                'pid'=>$process->pid,
+                'name'=>$this->config->getProcessName(),
+                'group'=>$this->config->getProcessGroup()
+            ]);
+        }
         /*
          * swoole自定义进程协程与非协程的兼容
          * 开一个协程，让进程推出的时候，执行清理reactor
@@ -112,14 +122,23 @@ abstract class AbstractProcess
             Process::signal(SIGTERM, null);
             Event::exit();
         });
-        register_shutdown_function(function () {
+        register_shutdown_function(function ()use($table,$process) {
+            if($table){
+                $table->del($process->pid);
+            }
             $schedule = new Scheduler();
             $schedule->add(function (){
-                try{
-                    $this->onShutDown();
-                }catch (\Throwable $throwable){
-                    $this->onException($throwable);
-                }
+                $channel = new Coroutine\Channel(1);
+                go(function ()use($channel){
+                    try{
+                        $this->onShutDown();
+                    }catch (\Throwable $throwable){
+                        $this->onException($throwable);
+                    }
+                    $channel->push(1);
+                });
+                $channel->pop($this->config->getMaxExitWaitTime());
+                Event::exit();
                 \Swoole\Timer::clearAll();
             });
             $schedule->start();
