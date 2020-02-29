@@ -97,8 +97,8 @@ abstract class AbstractProcess
             ]);
             \Swoole\Timer::tick(1*1000,function ()use($table,$process){
                 $table->set($process->pid,[
-                    'memoryUsage'=>memory_get_usage(),
-                    'memoryPeakUsage'=>memory_get_peak_usage()
+                    'memoryUsage'=>memory_get_usage(true),
+                    'memoryPeakUsage'=>memory_get_peak_usage(true)
                 ]);
             });
 
