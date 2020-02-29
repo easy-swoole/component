@@ -30,6 +30,14 @@ class Manager
             'group'=>[
                 'type'=>Table::TYPE_STRING,
                 'size'=>45,
+            ],
+            'memoryUsage'=>[
+                'type'=>Table::TYPE_INT,
+                'size'=>8,
+            ],
+            'memoryPeakUsage'=>[
+                'type'=>Table::TYPE_INT,
+                'size'=>8,
             ]
         ]);
         $this->table = TableManager::getInstance()->get(AbstractProcess::PROCESS_TABLE_NAME);
