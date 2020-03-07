@@ -27,11 +27,11 @@ abstract class AbstractTcpProcess extends AbstractProcess
         $socket->setOption(SOL_SOCKET,SO_REUSEADDR,true);
         $ret = $socket->bind($this->getConfig()->getListenAddress(),$this->getConfig()->getListenPort());
         if(!$ret){
-            throw new Exception(static::class." bind {$this->getConfig()->getListenAddress()} at {$this->getConfig()->getListenPort()} fail ");
+            throw new Exception(static::class." bind {$this->getConfig()->getListenAddress()}:{$this->getConfig()->getListenPort()} fail case ".$socket->errMsg);
         }
         $ret = $socket->listen(2048);
         if(!$ret){
-            throw new Exception(static::class." listen {$this->getConfig()->getListenAddress()} at {$this->getConfig()->getListenPort()} fail ");
+            throw new Exception(static::class." listen {$this->getConfig()->getListenAddress()}:{$this->getConfig()->getListenPort()} fail case ".$socket->errMsg);
         }
         while (1){
             $client = $socket->accept(-1);
