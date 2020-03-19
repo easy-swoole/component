@@ -25,8 +25,10 @@ class ChannelLock
         /** @var Channel $channel */
         $channel = $this->list[$lockName];
         $ret = $channel->push(1,$timeout);
-        $this->status[$cid] = true;
-        return true;
+        if($ret){
+            $this->status[$cid] = true;
+        }
+        return $ret;
     }
 
     function unlock(string $lockName,float $timeout = -1):bool
@@ -44,9 +46,11 @@ class ChannelLock
             unset($this->status[$cid]);
             return true;
         }else{
-            $channel->pop($timeout);
-            unset($this->status[$cid]);
-            return true;
+            $ret = $channel->pop($timeout);
+            if($ret){
+                unset($this->status[$cid]);
+            }
+            return $ret;
         }
     }
 
