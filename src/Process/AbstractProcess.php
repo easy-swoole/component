@@ -121,6 +121,7 @@ abstract class AbstractProcess
             }
         });
         Process::signal(SIGTERM,function ()use($process){
+            $this->onSigTerm();
             swoole_event_del($process->pipe);
             /*
              * 清除全部定时器
@@ -180,6 +181,11 @@ abstract class AbstractProcess
     protected abstract function run($arg);
 
     protected function onShutDown()
+    {
+
+    }
+
+    protected function onSigTerm()
     {
 
     }
