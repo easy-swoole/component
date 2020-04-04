@@ -58,7 +58,7 @@ class Task
     /**
      * @return callable
      */
-    public function getOnSuccess(): callable
+    public function getOnSuccess():? callable
     {
         return $this->onSuccess;
     }
@@ -74,7 +74,7 @@ class Task
     /**
      * @return callable
      */
-    public function getOnFail(): callable
+    public function getOnFail():? callable
     {
         return $this->onFail;
     }
