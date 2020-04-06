@@ -15,34 +15,28 @@ class Manager
 
     protected $processList = [];
     protected $table;
+    protected $processResource = [];
 
     function __construct()
     {
-        TableManager::getInstance()->add(AbstractProcess::PROCESS_TABLE_NAME,[
-            'pid'=>[
-                'type'=>Table::TYPE_INT,
-                'size'=>10,
-            ],
-            'name'=>[
-                'type'=>Table::TYPE_STRING,
-                'size'=>45,
-            ],
-            'group'=>[
-                'type'=>Table::TYPE_STRING,
-                'size'=>45,
-            ],
-            'memoryUsage'=>[
-                'type'=>Table::TYPE_INT,
-                'size'=>8,
-            ],
-            'memoryPeakUsage'=>[
-                'type'=>Table::TYPE_INT,
-                'size'=>8,
-            ]
-        ]);
-        $this->table = TableManager::getInstance()->get(AbstractProcess::PROCESS_TABLE_NAME);
+        $this->table = new Table(2048);
+        $this->table->column('pid',Table::TYPE_INT,8);
+        $this->table->column('name',Table::TYPE_STRING,50);
+        $this->table->column('group',Table::TYPE_STRING,50);
+        $this->table->column('memoryUsage',Table::TYPE_INT,8);
+        $this->table->column('memoryPeakUsage',Table::TYPE_INT,8);
+        $this->table->create();
     }
 
+    function getProcessResource():array
+    {
+        return $this->processResource;
+    }
+
+    function getProcessTable():Table
+    {
+        return $this->table;
+    }
 
     function kill($pidOrGroupName,$sig = SIGTERM):array
     {
@@ -124,5 +118,10 @@ class Manager
             }
         }
         return $list;
+    }
+
+    function __addProcessResource(AbstractProcess $process)
+    {
+        $this->processResource[] = $process;
     }
 }
