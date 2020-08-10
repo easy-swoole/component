@@ -96,7 +96,6 @@ class ReadyScheduler
                 }
             }
         }
-        return true;
     }
 
     function waitAnyReady(array $keys,float $timeout = 3.0):bool
@@ -117,7 +116,6 @@ class ReadyScheduler
                 return false;
             }
         }
-        return true;
     }
 
 }
