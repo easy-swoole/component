@@ -49,7 +49,7 @@ class Manager
         }else{
             foreach ($this->table as $key => $value){
                 if($value['group'] == $pidOrGroupName){
-                    $list[$key] = $value;
+                    $list[$key] = $value['pid'];
                 }
             }
         }
