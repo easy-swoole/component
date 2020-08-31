@@ -54,7 +54,7 @@ class Manager
             }
         }
         $this->clearPid($list);
-        foreach ($list as $pid){
+        foreach ($list as $pid => $value){
             Process::kill($pid,$sig);
         }
         return $list;
