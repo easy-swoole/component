@@ -4,7 +4,6 @@
 namespace EasySwoole\Component\Process;
 
 use EasySwoole\Component\Singleton;
-use EasySwoole\Component\TableManager;
 use Swoole\Process;
 use Swoole\Server;
 use Swoole\Table;
@@ -25,6 +24,7 @@ class Manager
         $this->table->column('group',Table::TYPE_STRING,50);
         $this->table->column('memoryUsage',Table::TYPE_INT,8);
         $this->table->column('memoryPeakUsage',Table::TYPE_INT,8);
+        $this->table->column('startUpTime',Table::TYPE_INT,8);
         $this->table->create();
     }
 
