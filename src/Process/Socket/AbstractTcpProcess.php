@@ -25,6 +25,7 @@ abstract class AbstractTcpProcess extends AbstractProcess
         $socket = new Socket(AF_INET,SOCK_STREAM,0);
         $socket->setOption(SOL_SOCKET,SO_REUSEPORT,true);
         $socket->setOption(SOL_SOCKET,SO_REUSEADDR,true);
+        $socket->setOption(SOL_SOCKET,SO_LINGER,$this->getConfig()->getLinger());
         $ret = $socket->bind($this->getConfig()->getListenAddress(),$this->getConfig()->getListenPort());
         if(!$ret){
             throw new Exception(static::class." bind {$this->getConfig()->getListenAddress()}:{$this->getConfig()->getListenPort()} fail case ".$socket->errMsg);
