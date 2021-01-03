@@ -14,6 +14,8 @@ class Runner
     protected $isRunning = false;
     protected $runningNum = 0;
     protected $onException;
+    /** @var callable|null */
+    protected $onLoop;
 
     function __construct($concurrency = 64,$taskChannelSize = 1024)
     {
@@ -21,16 +23,22 @@ class Runner
         $this->taskChannel = new Channel($taskChannelSize);
     }
 
-    function setOnException(callable $call)
+    function setOnException(callable $call):Runner
     {
         $this->onException = $call;
         return $this;
     }
 
-    function status()
+    function setOnLoop(callable $call):Runner
+    {
+        $this->onLoop = $call;
+        return $this;
+    }
+
+    function status():array
     {
         return [
-            'taskNum'=>$this->taskChannel->stats(),
+            'queueSize'=>$this->taskChannel->length(),
             'concurrency'=>$this->concurrency,
             'runningNum'=>$this->runningNum,
             'isRunning'=>$this->isRunning
@@ -43,14 +51,23 @@ class Runner
         return $this;
     }
 
+    function queueSize():int
+    {
+        return $this->taskChannel->length();
+    }
+
     function start(float $waitTime = 30)
     {
         if(!$this->isRunning){
             $this->isRunning = true;
+            $this->runningNum = 0;
+        }
+        if($waitTime <=0){
+            $waitTime = PHP_INT_MAX;
         }
         $start = time();
         while ($waitTime > 0){
-            if($this->runningNum < $this->concurrency && !$this->taskChannel->isEmpty()){
+            if($this->runningNum <= $this->concurrency && !$this->taskChannel->isEmpty()){
                 $task = $this->taskChannel->pop(0.01);
                 if($task instanceof Task){
                     Coroutine::create(function ()use($task){
@@ -88,7 +105,11 @@ class Runner
                     Coroutine::sleep(0.01);
                 }
             }
+            if(is_callable($this->onLoop)){
+                call_user_func($this->onLoop,$this);
+            }
         }
         $this->isRunning = false;
+        $this->runningNum = 0;
     }
 }
