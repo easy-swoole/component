@@ -67,6 +67,9 @@ class Runner
         }
         $start = time();
         while ($waitTime > 0){
+            if(is_callable($this->onLoop)){
+                call_user_func($this->onLoop,$this);
+            }
             if($this->runningNum <= $this->concurrency && !$this->taskChannel->isEmpty()){
                 $task = $this->taskChannel->pop(0.01);
                 if($task instanceof Task){
@@ -104,9 +107,6 @@ class Runner
                      */
                     Coroutine::sleep(0.01);
                 }
-            }
-            if(is_callable($this->onLoop)){
-                call_user_func($this->onLoop,$this);
             }
         }
         $this->isRunning = false;
