@@ -90,7 +90,7 @@ class Di
                                 if($class){
                                     $temp = $this->get($class->getName());
                                 }else{
-                                    $temp = Di::getInstance()->get($p->getName());
+                                    $temp = $this->get($p->getName());
                                 }
                                 $params[] = $temp;
                             }
