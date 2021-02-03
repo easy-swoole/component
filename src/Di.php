@@ -80,7 +80,15 @@ class Di
                 return $obj;
             }else if(is_string($obj) && class_exists($obj)){
                 try{
-                    $this->container[$key]['obj'] = new $obj(...$params);
+                    $ref = new \ReflectionClass($obj);
+                    if(empty($params)){
+                        $list = $ref->getConstructor()->getParameters();
+                        foreach ($list as $p){
+                            $name = $p->getName();
+                            $params[] = Di::getInstance()->get($name);
+                        }
+                    }
+                    $this->container[$key]['obj'] = $ref->newInstanceArgs($params);
                     return $this->container[$key]['obj'];
                 }catch (\Throwable $throwable){
                     throw $throwable;
