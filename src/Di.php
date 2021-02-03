@@ -19,7 +19,7 @@ class Di
 
     public function alias($alias,$key): Di
     {
-        if(!isset($this->container[$alias])){
+        if(!array_key_exists($alias,$this->container)){
             $this->alias[$alias] = $key;
             return $this;
         }else{
