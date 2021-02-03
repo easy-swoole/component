@@ -82,15 +82,18 @@ class Di
                 try{
                     $ref = new \ReflectionClass($obj);
                     if(empty($params)){
-                        $list = $ref->getConstructor()->getParameters();
-                        foreach ($list as $p){
-                            $class = $p->getClass();
-                            if($class){
-                                $temp = $this->get($class);
-                            }else{
-                                $temp = Di::getInstance()->get($p->getName());
+                        $constructor = $ref->getConstructor();
+                        if($constructor){
+                            $list = $constructor->getParameters();
+                            foreach ($list as $p){
+                                $class = $p->getClass();
+                                if($class){
+                                    $temp = $this->get($class->getName());
+                                }else{
+                                    $temp = Di::getInstance()->get($p->getName());
+                                }
+                                $params[] = $temp;
                             }
-                            $params[] = $temp;
                         }
                     }
                     $this->container[$key]['obj'] = $ref->newInstanceArgs($params);
