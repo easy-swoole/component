@@ -84,8 +84,13 @@ class Di
                     if(empty($params)){
                         $list = $ref->getConstructor()->getParameters();
                         foreach ($list as $p){
-                            $name = $p->getName();
-                            $params[] = Di::getInstance()->get($name);
+                            $class = $p->getClass();
+                            if($class){
+                                $temp = $this->get($class);
+                            }else{
+                                $temp = Di::getInstance()->get($p->getName());
+                            }
+                            $params[] = $temp;
                         }
                     }
                     $this->container[$key]['obj'] = $ref->newInstanceArgs($params);
