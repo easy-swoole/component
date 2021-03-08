@@ -3,7 +3,10 @@
 namespace EasySwoole\Component\Tests;
 
 use EasySwoole\Component\Di;
+use EasySwoole\Component\Tests\Lib\Get;
 use PHPUnit\Framework\TestCase;
+use EasySwoole\Component\Tests\Lib\Bar;
+use EasySwoole\Component\Tests\Lib\Foo;
 
 class DiTest extends TestCase
 {
@@ -43,6 +46,13 @@ class DiTest extends TestCase
         Di::getInstance()->set(Bar::class, Bar::class);
         Di::getInstance()->set(Foo::class, Foo::class);
         $this->assertEquals(Di::getInstance()->get(Foo::class)->bar->bar, 'bar');
+
+        Di::getInstance()->set(Get::class, Get::class);
+        Di::getInstance()->set('foo', Foo::class);
+        $this->assertInstanceOf(Foo::class, Di::getInstance()->get(Get::class)->foo);
+        Di::getInstance()->delete('foo');
+        Di::getInstance()->set(Get::class, Get::class);
+        $this->assertEquals(1, Di::getInstance()->get(Get::class)->foo);
     }
 
     public function testAlias()

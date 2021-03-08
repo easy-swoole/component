@@ -1,6 +1,6 @@
 <?php
 
-namespace EasySwoole\Component\Tests;
+namespace EasySwoole\Component\Tests\Lib;
 
 class Foo
 {
