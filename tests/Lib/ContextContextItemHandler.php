@@ -6,7 +6,7 @@
  * Time: 23:27
  */
 
-namespace EasySwoole\Component\Tests;
+namespace EasySwoole\Component\Tests\Lib;
 
 
 use EasySwoole\Component\Context\ContextItemHandlerInterface;

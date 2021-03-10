@@ -10,6 +10,7 @@ namespace EasySwoole\Component\Tests;
 
 
 use EasySwoole\Component\Context\ContextManager;
+use EasySwoole\Component\Tests\Lib\ContextContextItemHandler;
 use PHPUnit\Framework\TestCase;
 
 class ContextTest extends TestCase
