@@ -15,9 +15,9 @@ trait Singleton
 
     static function getInstance(...$args)
     {
-        if(!isset(self::$instance)){
-            self::$instance = new static(...$args);
+        if(!isset(static::$instance)){
+            static::$instance = new static(...$args);
         }
-        return self::$instance;
+        return static::$instance;
     }
 }
