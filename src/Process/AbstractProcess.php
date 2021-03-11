@@ -100,13 +100,6 @@ abstract class AbstractProcess
                 'memoryPeakUsage'=>memory_get_peak_usage(true)
             ]);
         });
-        /*
-         * swoole自定义进程协程与非协程的兼容
-         * 开一个协程，让进程推出的时候，执行清理reactor
-         */
-        Coroutine::create(function (){
-
-        });
         if(!in_array(PHP_OS,['Darwin','CYGWIN','WINNT']) && !empty($this->getProcessName())){
             $process->name($this->getProcessName());
         }
@@ -118,14 +111,16 @@ abstract class AbstractProcess
             }
         });
         Process::signal(SIGTERM,function ()use($process){
-            $this->onSigTerm();
             swoole_event_del($process->pipe);
-            /*
-             * 清除全部定时器
-             */
-            \Swoole\Timer::clearAll();
-            Process::signal(SIGTERM, null);
-            Event::exit();
+            try{
+                $this->onSigTerm();
+            }catch (\Throwable $throwable){
+                $this->onException($throwable);
+            } finally {
+                \Swoole\Timer::clearAll();
+                Process::signal(SIGTERM, null);
+                Event::exit();
+            }
         });
         register_shutdown_function(function ()use($table,$process) {
             if($table){
@@ -134,7 +129,7 @@ abstract class AbstractProcess
             $schedule = new Scheduler();
             $schedule->add(function (){
                 $channel = new Coroutine\Channel(1);
-                go(function ()use($channel){
+                Coroutine::create(function ()use($channel){
                     try{
                         $this->onShutDown();
                     }catch (\Throwable $throwable){
@@ -143,17 +138,19 @@ abstract class AbstractProcess
                     $channel->push(1);
                 });
                 $channel->pop($this->config->getMaxExitWaitTime());
-                Event::exit();
                 \Swoole\Timer::clearAll();
+                Event::exit();
             });
             $schedule->start();
+            \Swoole\Timer::clearAll();
+            Event::exit();
         });
-
         try{
             $this->run($this->config->getArg());
         }catch (\Throwable $throwable){
             $this->onException($throwable);
         }
+        Event::wait();
     }
 
     public function getArg()
