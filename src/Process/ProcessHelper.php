@@ -9,9 +9,11 @@
 namespace EasySwoole\Component\Process;
 
 
+use Swoole\Server;
+
 class ProcessHelper
 {
-    static function register(\swoole_server $server,AbstractProcess $process):bool
+    static function register(Server $server,AbstractProcess $process):bool
     {
         return $server->addProcess($process->getProcess());
     }

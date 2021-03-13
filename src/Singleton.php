@@ -13,6 +13,10 @@ trait Singleton
 {
     private static $instance;
 
+    /**
+     * @param mixed ...$args
+     * @return static
+     */
     static function getInstance(...$args)
     {
         if(!isset(static::$instance)){
