@@ -48,7 +48,7 @@ abstract class AbstractProcess
             $this->config->setEnableCoroutine($enableCoroutine);
         }
         $this->swooleProcess = new Process([$this,'__start'],$this->config->isRedirectStdinStdout(),$this->config->getPipeType(),$this->config->isEnableCoroutine());
-        Manager::getInstance()->__addProcessResource($this);
+        Manager::getInstance()->addProcess($this);
     }
 
     public function getProcess():Process

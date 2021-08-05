@@ -14,7 +14,7 @@ class Manager
 
     protected $processList = [];
     protected $table;
-    protected $processResource = [];
+
 
     function __construct()
     {
@@ -26,11 +26,6 @@ class Manager
         $this->table->column('memoryPeakUsage',Table::TYPE_INT,8);
         $this->table->column('startUpTime',Table::TYPE_INT,8);
         $this->table->create();
-    }
-
-    function getProcessResource():array
-    {
-        return $this->processResource;
     }
 
     function getProcessTable():Table
@@ -89,9 +84,10 @@ class Manager
         return $this->clearPid($list);
     }
 
-    function addProcess(AbstractProcess $process)
+    function addProcess(AbstractProcess $process): Manager
     {
-        $this->processList[] = $process;;
+        $hash = spl_object_hash($process->getProcess());
+        $this->processList[$hash] = $process;
         return $this;
     }
 
@@ -118,10 +114,5 @@ class Manager
             }
         }
         return $list;
-    }
-
-    function __addProcessResource(AbstractProcess $process)
-    {
-        $this->processResource[] = $process;
     }
 }
