@@ -13,6 +13,7 @@ class Manager
     use Singleton;
 
     protected $processList = [];
+    protected $autoRegister = [];
     protected $table;
 
 
@@ -84,9 +85,10 @@ class Manager
         return $this->clearPid($list);
     }
 
-    function addProcess(AbstractProcess $process): Manager
+    function addProcess(AbstractProcess $process,bool $autoRegister = true): Manager
     {
         $hash = spl_object_hash($process->getProcess());
+        $this->autoRegister[$hash] = $autoRegister;
         $this->processList[$hash] = $process;
         return $this;
     }
@@ -94,9 +96,11 @@ class Manager
     function attachToServer(Server $server)
     {
         /** @var AbstractProcess $process */
-        foreach ($this->processList as $process)
+        foreach ($this->processList as $hash => $process)
         {
-            $server->addProcess($process->getProcess());
+            if($this->autoRegister[$hash] === true){
+                $server->addProcess($process->getProcess());
+            }
         }
     }
 
