@@ -34,6 +34,28 @@ class Manager
         return $this->table;
     }
 
+    function getProcessByPid(int $pid):?AbstractProcess
+    {
+        /** @var AbstractProcess $p */
+        foreach ($this->processList as $p)
+        {
+            if($p->getPid() === $pid){
+                return  $p;
+            }
+        }
+        return null;
+    }
+
+    function getProcessByName(string $name):array
+    {
+        //可能存在同名进程，因此是返回数组。
+    }
+
+    function getProcessByGroup():array
+    {
+
+    }
+
     function kill($pidOrGroupName,$sig = SIGTERM):array
     {
         $list = [];
