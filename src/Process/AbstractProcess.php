@@ -92,7 +92,8 @@ abstract class AbstractProcess
             'pid'=>$process->pid,
             'name'=>$this->config->getProcessName(),
             'group'=>$this->config->getProcessGroup(),
-            'startUpTime'=>time()
+            'startUpTime'=>time(),
+            "hash"=>spl_object_hash($this->getProcess())
         ]);
         \Swoole\Timer::tick(1*1000,function ()use($table,$process){
             $table->set($process->pid,[

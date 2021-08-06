@@ -27,6 +27,7 @@ class Manager
         $this->table->column('memoryUsage', Table::TYPE_INT, 8);
         $this->table->column('memoryPeakUsage', Table::TYPE_INT, 8);
         $this->table->column('startUpTime', Table::TYPE_INT, 8);
+        $this->table->column('hash', Table::TYPE_INT, 32);
         $this->table->create();
     }
 
@@ -37,9 +38,11 @@ class Manager
 
     public function getProcessByPid(int $pid): ?AbstractProcess
     {
-        foreach ($this->processList as $process) {
-            if ($process->getPid() === $pid) {
-                return $process;
+        $info = $this->table->get($pid);
+        if($info){
+            $hash = $info['hash'];
+            if(isset($this->processList[$hash])){
+                return $this->processList[$hash];
             }
         }
         return null;
