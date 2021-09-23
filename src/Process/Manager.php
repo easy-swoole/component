@@ -27,7 +27,7 @@ class Manager
         $this->table->column('memoryUsage', Table::TYPE_INT, 8);
         $this->table->column('memoryPeakUsage', Table::TYPE_INT, 8);
         $this->table->column('startUpTime', Table::TYPE_INT, 8);
-        $this->table->column('hash', Table::TYPE_INT, 32);
+        $this->table->column('hash', Table::TYPE_STRING, 32);
         $this->table->create();
     }
 
