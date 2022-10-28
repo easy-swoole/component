@@ -101,7 +101,17 @@ abstract class AbstractProcess
                 'memoryPeakUsage'=>memory_get_peak_usage(true)
             ]);
         });
-        if(!in_array(PHP_OS,['Darwin','CYGWIN','WINNT']) && !empty($this->getProcessName())){
+        
+        $banOS = ['Darwin','CYGWIN','WINNT'];
+        $canSetProcessName = true;
+        foreach ($banOS as $os){
+            if (strpos(PHP_OS, $os) !== false) {
+                $canSetProcessName = false;
+                break;
+            }
+        }
+
+        if($canSetProcessName && !empty($this->getProcessName())){
             $process->name($this->getProcessName());
         }
         swoole_event_add($this->swooleProcess->pipe, function(){
