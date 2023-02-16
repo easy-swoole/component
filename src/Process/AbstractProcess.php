@@ -44,7 +44,12 @@ abstract class AbstractProcess
             $pipeType = array_shift($args);
             $pipeType = $pipeType === null ? Config::PIPE_TYPE_SOCK_DGRAM : $pipeType;
             $this->config->setPipeType($pipeType);
-            $enableCoroutine = (bool)array_shift($args) ?: false;
+            $bool = array_shift($args);
+            if($bool === null){
+                $enableCoroutine = true;
+            }else{
+                $enableCoroutine = (bool)$bool;
+            }
             $this->config->setEnableCoroutine($enableCoroutine);
         }
         $this->swooleProcess = new Process([$this,'__start'],$this->config->isRedirectStdinStdout(),$this->config->getPipeType(),$this->config->isEnableCoroutine());
