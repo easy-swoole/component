@@ -4,6 +4,7 @@
 namespace EasySwoole\Component;
 
 
+use Swoole\Coroutine;
 use Swoole\Coroutine\Channel;
 
 class WaitGroup
@@ -20,9 +21,20 @@ class WaitGroup
         $this->reset();
     }
 
-    public function add()
+    public function add(?callable $func = null)
     {
         $this->count++;
+        if($func){
+            Coroutine::create(function ()use($func){
+                try{
+                    call_user_func($func);
+                }catch (\Throwable $throwable){
+                    throw $throwable;
+                }finally {
+                    $this->done();
+                }
+            });
+        }
     }
 
     function successNum():int
