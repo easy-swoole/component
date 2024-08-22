@@ -166,7 +166,12 @@ abstract class AbstractProcess
         }catch (\Throwable $throwable){
             $this->onException($throwable);
         }
-        Event::wait();
+        //加了 Event::wait() 在开启协程的时候，可能会crash，
+        //swoole v5.1.3 新版本为了防止出现这个情况，所以加了判断
+        //v4 v5的swoole 均有这个问题
+        if(!$this->config->isEnableCoroutine()){
+            Event::wait();
+        }
     }
 
     public function getArg()

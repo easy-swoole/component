@@ -18,7 +18,7 @@ class Config extends SplBean
     protected $arg;
     protected $redirectStdinStdout = false;
     protected $pipeType = self::PIPE_TYPE_SOCK_DGRAM;
-    protected $enableCoroutine = false;
+    protected $enableCoroutine = true;
     protected $maxExitWaitTime = 3;
 
     /**
