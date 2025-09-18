@@ -21,8 +21,8 @@ class Manager
     {
         $this->table = new Table(2048);
         $this->table->column('pid', Table::TYPE_INT, 8);
-        $this->table->column('name', Table::TYPE_STRING, 50);
-        $this->table->column('group', Table::TYPE_STRING, 50);
+        $this->table->column('name', Table::TYPE_STRING, 64);
+        $this->table->column('group', Table::TYPE_STRING, 64);
         $this->table->column('memoryUsage', Table::TYPE_INT, 8);
         $this->table->column('memoryPeakUsage', Table::TYPE_INT, 8);
         $this->table->column('startUpTime', Table::TYPE_INT, 8);
