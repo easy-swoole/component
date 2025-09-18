@@ -26,7 +26,9 @@ class Manager
         $this->table->column('memoryUsage', Table::TYPE_INT, 8);
         $this->table->column('memoryPeakUsage', Table::TYPE_INT, 8);
         $this->table->column('startUpTime', Table::TYPE_INT, 8);
+        $this->table->column('lastHeartBeat', Table::TYPE_INT, 8);
         $this->table->column('hash', Table::TYPE_STRING, 32);
+        $this->table->column('customProcess', Table::TYPE_INT, 1);
         $this->table->create();
     }
 
