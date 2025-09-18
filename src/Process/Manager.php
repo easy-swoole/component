@@ -14,7 +14,6 @@ class Manager
 
     /** @var AbstractProcess[] $processList */
     protected $processList = [];
-    protected $autoRegister = [];
     protected $table;
 
 
@@ -34,42 +33,6 @@ class Manager
     public function getProcessTable(): Table
     {
         return $this->table;
-    }
-
-    public function getProcessByPid(int $pid): ?AbstractProcess
-    {
-        $info = $this->table->get($pid);
-        if($info){
-            $hash = $info['hash'];
-            if(isset($this->processList[$hash])){
-                return $this->processList[$hash];
-            }
-        }
-        return null;
-    }
-
-    public function getProcessByName(string $name): array
-    {
-        $ret = [];
-        foreach ($this->processList as $process) {
-            if ($process->getProcessName() === $name) {
-                $ret[] = $process;
-            }
-        }
-
-        return $ret;
-    }
-
-    public function getProcessByGroup(string $group): array
-    {
-        $ret = [];
-        foreach ($this->processList as $process) {
-            if ($process->getConfig()->getProcessGroup() === $group) {
-                $ret[] = $process;
-            }
-        }
-
-        return $ret;
     }
 
     public function kill($pidOrGroupName, $sig = SIGTERM): array
@@ -123,20 +86,16 @@ class Manager
         return $this->clearPid($list);
     }
 
-    public function addProcess(AbstractProcess $process, bool $autoRegister = true): Manager
+    public function addProcess(AbstractProcess $process): Manager
     {
-        $hash = spl_object_hash($process->getProcess());
-        $this->autoRegister[$hash] = $autoRegister;
-        $this->processList[$hash] = $process;
+        $this->processList[] = $process;
         return $this;
     }
 
     public function attachToServer(Server $server)
     {
-        foreach ($this->processList as $hash => $process) {
-            if ($this->autoRegister[$hash] === true) {
-                $server->addProcess($process->getProcess());
-            }
+        foreach ($this->processList as $process) {
+            $server->addProcess($process->getProcess());
         }
     }
 
