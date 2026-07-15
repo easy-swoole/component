@@ -14,7 +14,7 @@ class Container
     private $container = [];
     private $allowKeys = null;
 
-    function __construct(array $allowKeys = null)
+    function __construct(array|null $allowKeys = null)
     {
         $this->allowKeys = $allowKeys;
     }

@@ -21,7 +21,7 @@ class WaitGroup
         $this->reset();
     }
 
-    public function add(?callable $func = null)
+    public function add(callable|null $func = null)
     {
         $this->count++;
         if($func){

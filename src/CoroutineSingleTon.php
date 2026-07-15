@@ -31,7 +31,7 @@ trait CoroutineSingleTon
         return static::$instance[$cid];
     }
 
-    function destroy(int $cid = null)
+    function destroy(int|null $cid = null)
     {
         if($cid === null){
             $cid = Coroutine::getCid();
