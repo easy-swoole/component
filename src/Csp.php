@@ -14,7 +14,7 @@ class Csp
     private $success = 0;
     private $task = [];
 
-    function __construct(int $size = 8)
+    function __construct(int $size = 64)
     {
         $this->chan = new Channel($size);
     }
