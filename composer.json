@@ -17,7 +17,6 @@
         "easyswoole/spl": "^2.0"
     },
     "require-dev": {
-        "easyswoole/phpunit": "^1.0",
         "easyswoole/swoole-ide-helper": "^1.2"
     },
     "autoload": {

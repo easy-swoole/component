@@ -9,7 +9,6 @@
 namespace EasySwoole\Component\Context;
 
 
-use EasySwoole\Component\Context\Exception\ModifyError;
 use EasySwoole\Component\Singleton;
 use Swoole\Coroutine;
 
@@ -17,54 +16,37 @@ class ContextManager
 {
     use Singleton;
 
-    private $contextHandler = [];
+    private array $context = [];
 
-    private $context = [];
+    private array $deferList = [];
 
-    private $deferList = [];
 
-    public function registerItemHandler($key, ContextItemHandlerInterface $handler):ContextManager
+    public function set($key,$value,int|null $cid = null):ContextManager
     {
-        $this->contextHandler[$key] = $handler;
-        return $this;
-    }
-
-    public function set($key,$value,$cid = null):ContextManager
-    {
-        if(isset($this->contextHandler[$key])){
-            throw new ModifyError('key is already been register for context item handler');
+        if($cid == null){
+            $cid = $this->getCid();
         }
-        $cid = $this->getCid($cid);
         $this->context[$cid][$key] = $value;
         return $this;
     }
 
-    public function get($key,$cid = null)
+    public function get($key,int|null $cid = null):mixed
     {
-        $cid = $this->getCid($cid);
-        if(isset($this->context[$cid][$key])){
-            return $this->context[$cid][$key];
+        if($cid == null){
+            $cid = $this->getCid();
         }
-        if(isset($this->contextHandler[$key])){
-            /** @var ContextItemHandlerInterface $handler */
-            $handler = $this->contextHandler[$key];
-            $this->context[$cid][$key] = $handler->onContextCreate();
+        if(isset($this->context[$cid][$key])){
             return $this->context[$cid][$key];
         }
         return null;
     }
 
-    public function unset($key,$cid = null)
+    public function unset($key,int|null $cid = null):bool
     {
-        $cid = $this->getCid($cid);
+        if($cid == null){
+            $cid = $this->getCid();
+        }
         if(isset($this->context[$cid][$key])){
-            if(isset($this->contextHandler[$key])){
-                /** @var ContextItemHandlerInterface $handler */
-                $handler = $this->contextHandler[$key];
-                $item = $this->context[$cid][$key];
-                unset($this->context[$cid][$key]);
-                return $handler->onDestroy($item);
-            }
             unset($this->context[$cid][$key]);
             return true;
         }else{
@@ -72,52 +54,35 @@ class ContextManager
         }
     }
 
-    public function destroy($cid = null)
+    public function destroy(int|null $cid = null):void
     {
-        $cid = $this->getCid($cid);
-        if(isset($this->context[$cid])){
-            $data = $this->context[$cid];
-            foreach ($data as $key => $val){
-                $this->unset($key,$cid);
-            }
+        if($cid == null){
+            $cid = $this->getCid();
         }
         unset($this->context[$cid]);
     }
 
-    public function getCid($cid = null):int
+    protected function getCid(int|null $cid = null):int
     {
-        if($cid === null){
-            $cid = Coroutine::getUid();
-            if(!isset($this->deferList[$cid]) && $cid > 0){
-                $this->deferList[$cid] = true;
-                Coroutine::defer(function ()use($cid){
-                    unset($this->deferList[$cid]);
-                    $this->destroy($cid);
-                });
-            }
-            return $cid;
+        $cid = Coroutine::getUid();
+        if(!isset($this->deferList[$cid])){
+            $this->deferList[$cid] = true;
+            Coroutine::defer(function ()use($cid){
+                unset($this->deferList[$cid]);
+                $this->destroy($cid);
+            });
         }
         return $cid;
     }
 
-    public function destroyAll($force = false)
+    public function destroyAll():void
     {
-        if($force){
-            $this->context = [];
-        }else{
-            foreach ($this->context as $cid => $data){
-                $this->destroy($cid);
-            }
-        }
+        $this->context = [];
     }
 
-    public function getContextArray($cid = null):?array
+    public function getContextArray(int|null $cid = null):?array
     {
         $cid = $this->getCid($cid);
-        if(isset($this->context[$cid])){
-            return $this->context[$cid];
-        }else{
-            return null;
-        }
+        return $this->context[$cid] ?? null;
     }
 }
