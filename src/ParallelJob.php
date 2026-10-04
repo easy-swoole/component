@@ -112,7 +112,7 @@ class ParallelJob
                             call_user_func($this->taskCall, $task);
                         }catch (\Throwable $exception){
                             if($this->onException){
-                                call_user_func($this->onException,$exception);
+                                call_user_func($this->onException,$exception,$task);
                             }else{
                                 throw $exception;
                             }
