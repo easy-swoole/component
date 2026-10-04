@@ -13,11 +13,13 @@ class ParallelJob
 
     protected mixed $taskCall = null;
 
+    protected mixed $onException = null;
+
     protected bool $isFinish = false;
 
     protected bool $jobCallEmpty = false;
 
-    public float $jobWaitTime = 1.0;
+    public float $jobWaitTime = 0.01;
 
 
     function __construct(int $maxQueueSize = 1024)
@@ -31,9 +33,15 @@ class ParallelJob
         return $this;
     }
 
-    function setTaskCall(callable $func):ParallelJob
+    function setOnTask(callable $func):ParallelJob
     {
         $this->taskCall = $func;
+        return $this;
+    }
+
+    function setOnException(callable $func):ParallelJob
+    {
+        $this->onException = $func;
         return $this;
     }
 
@@ -58,15 +66,27 @@ class ParallelJob
         Coroutine::create(function ()use($maxJobTry){
             $trys = 0;
             while (!$this->isFinish){
-                $job = call_user_func($this->addTaskCall);
-                if($job){
-                    $trys = 0;
-                    $this->queueJob->push($job,-1);
-                }else{
-                    $trys++;
-                    if($trys >= $maxJobTry){
-                        $this->jobCallEmpty = true;
-                        break;
+                if($this->queueJob->isFull()){
+                    Coroutine::sleep(0.001);
+                    continue;
+                }
+                try {
+                    $job = call_user_func($this->addTaskCall);
+                    if($job){
+                        $trys = 0;
+                        $this->queueJob->push($job,-1);
+                    }else{
+                        $trys++;
+                        if($trys >= $maxJobTry){
+                            $this->jobCallEmpty = true;
+                            break;
+                        }
+                    }
+                }catch (\Throwable $exception){
+                    if($this->onException){
+                        call_user_func($this->onException,$exception);
+                    }else{
+                        throw $exception;
                     }
                 }
             }
@@ -88,7 +108,15 @@ class ParallelJob
                 while (!$this->isFinish) {
                     $task = $this->queueJob->pop($this->jobWaitTime);
                     if(!empty($task)){
-                        call_user_func($this->addTaskCall, $task);
+                        try {
+                            call_user_func($this->taskCall, $task);
+                        }catch (\Throwable $exception){
+                            if($this->onException){
+                                call_user_func($this->onException,$exception);
+                            }else{
+                                throw $exception;
+                            }
+                        }
                     }
                 }
             });
@@ -100,6 +128,22 @@ class ParallelJob
         return $this->isFinish;
     }
 
+    function interrupt():void
+    {
+        $this->isFinish = true;
+    }
+
+    function flushJobQueue():bool
+    {
+        if($this->isFinish){
+            while (!$this->queueJob->isEmpty()){
+                $this->queueJob->pop();
+            }
+            return true;
+        }
+        return false;
+    }
+
     /**
      * @throws \Exception
      */
@@ -108,12 +152,13 @@ class ParallelJob
         $start = time();
         $this->exec($coroutineNum,$maxJobTry);
         while (!$this->isFinish){
-            Coroutine::sleep(0.01);
             if($timeOut > 0){
                 if(time() - $start > $timeOut){
-                    break;
+                    $this->interrupt();
+                    return false;
                 }
             }
+            Coroutine::sleep(0.01);
         }
         return $this->isFinish;
     }
