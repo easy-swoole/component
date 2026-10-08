@@ -25,13 +25,11 @@ class Invoker
         try
         {
             Process::alarm($timeOut);
-            $ret = call_user_func($callable,...$params);
-            Process::alarm(-1);
-            return $ret;
+            return call_user_func($callable,...$params);
         }
-        catch(\Throwable $throwable)
+        finally
         {
-            throw $throwable;
+            Process::alarm(-1);
         }
     }
 }
