@@ -59,6 +59,10 @@ class ParallelJob
             throw new \Exception('taskCall cannot be null');
         }
 
+        if($this->isFinish){
+            return;
+        }
+
         $this->isFinish = false;
         $this->jobCallEmpty = false;
 
