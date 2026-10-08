@@ -62,11 +62,8 @@ class ContextManager
         unset($this->context[$cid]);
     }
 
-    protected function getCid(int|null $cid = null):int
+    protected function getCid():int
     {
-        if($cid !== null){
-            return $cid;
-        }
         $cid = Coroutine::getUid();
         if(!isset($this->deferList[$cid])){
             $this->deferList[$cid] = true;
@@ -85,7 +82,9 @@ class ContextManager
 
     public function getContextArray(int|null $cid = null):?array
     {
-        $cid = $this->getCid($cid);
+        if($cid == null){
+            $cid = $this->getCid();
+        }
         return $this->context[$cid] ?? null;
     }
 }
