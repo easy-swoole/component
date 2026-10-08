@@ -1,6 +1,6 @@
 <?php
 
-namespace EasySwoole\Component;
+namespace EasySwoole\Component\CoroutineRunner;
 
 use Swoole\Coroutine;
 use Swoole\Coroutine\Channel;

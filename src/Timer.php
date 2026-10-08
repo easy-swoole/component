@@ -13,7 +13,7 @@ class Timer
 {
     use Singleton;
 
-    protected $timerMap = [];
+    protected array $timerMap = [];
 
     function loop(int $ms, callable $callback, $name = null, ...$params): int
     {
@@ -54,6 +54,6 @@ class Timer
 
     function list():array 
     {
-        return SWTimer::list();
+        return iterator_to_array(SWTimer::list());
     }
 }

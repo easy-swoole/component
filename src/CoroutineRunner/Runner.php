@@ -70,7 +70,7 @@ class Runner
             if(is_callable($this->onLoop)){
                 call_user_func($this->onLoop,$this);
             }
-            if($this->runningNum <= $this->concurrency && !$this->taskChannel->isEmpty()){
+            if($this->runningNum < $this->concurrency && !$this->taskChannel->isEmpty()){
                 $task = $this->taskChannel->pop(0.01);
                 if($task instanceof Task){
                     Coroutine::create(function ()use($task){
@@ -82,7 +82,7 @@ class Runner
                             $task->setResult($ret);
                             if($ret !== false && is_callable($task->getOnSuccess())){
                                 call_user_func($task->getOnSuccess(),$task);
-                            }else if(is_callable($task->getOnFail())){
+                            }else if($ret === false && is_callable($task->getOnFail())){
                                 call_user_func($task->getOnFail(),$task);
                             }
                         }catch (\Throwable $throwable){

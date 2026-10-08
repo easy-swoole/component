@@ -64,6 +64,9 @@ class ContextManager
 
     protected function getCid(int|null $cid = null):int
     {
+        if($cid !== null){
+            return $cid;
+        }
         $cid = Coroutine::getUid();
         if(!isset($this->deferList[$cid])){
             $this->deferList[$cid] = true;
