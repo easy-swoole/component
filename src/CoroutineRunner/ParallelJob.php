@@ -17,6 +17,8 @@ class ParallelJob
 
     protected bool $isFinish = false;
 
+    protected bool $interrupt = false;
+
     protected bool $jobCallEmpty = false;
 
     public float $jobWaitTime = 0.01;
@@ -65,6 +67,7 @@ class ParallelJob
 
         $this->isFinish = false;
         $this->jobCallEmpty = false;
+        $this->interrupt = false;
 
         //单携程pop任务
         Coroutine::create(function ()use($maxJobTry){
@@ -98,6 +101,9 @@ class ParallelJob
 
         Coroutine::create(function (){
             while (true){
+                if($this->interrupt){
+                    break;
+                }
                 if($this->jobCallEmpty && $this->queueJob->isEmpty()){
                     $this->isFinish = true;
                     break;
@@ -135,6 +141,7 @@ class ParallelJob
     function interrupt():void
     {
         $this->isFinish = true;
+        $this->interrupt = true;
     }
 
     function flushJobQueue():bool
