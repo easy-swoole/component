@@ -15,9 +15,9 @@ use Swoole\Coroutine\Scheduler;
 
 abstract class AbstractProcess
 {
-    private $swooleProcess;
+    private Process $swooleProcess;
     /** @var Config */
-    private $config;
+    private Config $config;
 
 
     /**
