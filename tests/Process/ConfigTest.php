@@ -36,13 +36,6 @@ final class ConfigTest extends TestCase
         (new Config())->setPipeType(99);
     }
 
-    public function testRejectsNegativeExitWaitTime(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-
-        (new Config())->setMaxExitWaitTime(-1);
-    }
-
     public function testProcessGroupCanBeCleared(): void
     {
         $config = new Config();

@@ -141,7 +141,6 @@ final class AbstractProcessTest extends TestCase
         $config->setProcessName('phpunit-process');
         $config->setPipeType($pipeType);
         $config->setEnableCoroutine(false);
-        $config->setMaxExitWaitTime(1);
         return $config;
     }
 

@@ -441,7 +441,6 @@ $result = Invoker::exec(function (string $name) {
 | `redirectStdinStdout` | `false` | 是否重定向标准输入输出 |
 | `pipeType` | `PIPE_TYPE_SOCK_DGRAM` | 也可选 `PIPE_TYPE_NONE`、`PIPE_TYPE_SOCK_STREAM` |
 | `enableCoroutine` | `true` | 是否在子进程回调中启用协程 |
-| `maxExitWaitTime` | `3` | 兼容旧版配置；当前关闭钩子同步执行，不再使用该值强制中断 |
 
 ### AbstractProcess
 

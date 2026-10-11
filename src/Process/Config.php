@@ -19,7 +19,6 @@ class Config extends SplBean
     protected $redirectStdinStdout = false;
     protected $pipeType = self::PIPE_TYPE_SOCK_DGRAM;
     protected $enableCoroutine = true;
-    protected $maxExitWaitTime = 3;
 
     /**
      * @return mixed
@@ -106,27 +105,6 @@ class Config extends SplBean
     public function setEnableCoroutine(bool $enableCoroutine): void
     {
         $this->enableCoroutine = $enableCoroutine;
-    }
-
-    /**
-     * @return int
-     * @deprecated 关闭钩子现在同步执行；该配置仅为兼容旧版本而保留。
-     */
-    public function getMaxExitWaitTime(): int
-    {
-        return $this->maxExitWaitTime;
-    }
-
-    /**
-     * @param int $maxExitWaitTime
-     * @deprecated 关闭钩子现在同步执行；该配置仅为兼容旧版本而保留。
-     */
-    public function setMaxExitWaitTime(int $maxExitWaitTime): void
-    {
-        if ($maxExitWaitTime < 0) {
-            throw new \InvalidArgumentException('maxExitWaitTime must be greater than or equal to 0');
-        }
-        $this->maxExitWaitTime = $maxExitWaitTime;
     }
 
     /**
