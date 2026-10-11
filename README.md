@@ -216,12 +216,27 @@ Co\run(function () {
     $waitGroup = new WaitGroup();
     $waitGroup->add(fn () => Co::sleep(0.1));
     $waitGroup->add(fn () => Co::sleep(0.2));
-    $waitGroup->wait(2.0);
+
+    // add() 只登记回调，不会立即执行。可以显式启动：
+    $waitGroup->start();
+
+    if (!$waitGroup->wait(2.0)) {
+        throw new RuntimeException('Timed out waiting for coroutine tasks');
+    }
+
     echo $waitGroup->successNum(); // 2
+    echo $waitGroup->count();      // 0
 });
 ```
 
-也可先无参数调用 `add()`，在自行创建的协程结束时调用 `done()`。每次 `add()` 必须对应一次 `done()`；超时后未完成计数仍会保留，复用前可调用 `reset()`。
+如果没有显式调用 `start()`，首次 `wait()` 会自动启动所有已登记回调。也可无参数调用 `add()` 登记手动任务；这类任务需要先启动 WaitGroup，再由外部协程调用 `done()`。每次 `add()` 必须对应一次 `done()`。
+
+- 一个 WaitGroup 只用于一批任务：`start()` 和 `wait()` 最多各调用一次。
+- 可以先显式调用一次 `start()`，再调用一次 `wait()`；如果 `wait()` 自动完成启动，之后不能再调用 `start()`。
+- 启动后不能继续 `add()`，即使 `wait()` 超时也不能再次等待。
+- `wait()` 返回 `true` 表示全部完成，返回 `false` 表示超时；超时不会取消仍在运行的协程。
+- `count()` 返回尚未完成的任务数，`successNum()` 返回最近一次 `wait()` 观察到的完成数。
+- 该类不提供 `reset()`；内部 Channel 会在析构函数中自动关闭。
 
 ### Csp
 
@@ -426,7 +441,7 @@ $result = Invoker::exec(function (string $name) {
 | `redirectStdinStdout` | `false` | 是否重定向标准输入输出 |
 | `pipeType` | `PIPE_TYPE_SOCK_DGRAM` | 也可选 `PIPE_TYPE_NONE`、`PIPE_TYPE_SOCK_STREAM` |
 | `enableCoroutine` | `true` | 是否在子进程回调中启用协程 |
-| `maxExitWaitTime` | `3` | 退出回调最大等待时间，单位为秒 |
+| `maxExitWaitTime` | `3` | 兼容旧版配置；当前关闭钩子同步执行，不再使用该值强制中断 |
 
 ### AbstractProcess
 
@@ -502,8 +517,90 @@ $worker = new WorkerProcess(
 - `onPipeReadable()` 必须调用 `read()` 消费数据，否则 LT 事件会持续触发。
 - `PIPE_TYPE_NONE` 不会创建可读写管道，不应配合当前实现的管道监听逻辑使用。
 - 父进程退出前应发送终止信号并调用 `Process::wait()` 回收子进程。
+- `onSigTerm()` 和 `onShutDown()` 在退出路径中同步执行，应快速完成，不要放入无法控制时长的阻塞操作。
 - 默认 `onException()` 会重新抛出异常；生产环境建议覆盖并记录上下文。
 - `addTick()`、`delay()` 和 `clearTick()` 分别用于添加循环定时器、延迟任务和清理定时器。
+
+#### 使用 WaitGroup 管理生产者和消费者
+
+当 `AbstractProcess` 内存在生产者、消费者等常驻协程时，不能在收到 SIGTERM 后立即退出事件循环。应使用同一个 WaitGroup 管理所有工作协程，在 `onShutDown()` 中先通知任务停止、关闭业务 Channel，再等待工作协程全部退出。
+
+```php
+use EasySwoole\Component\Process\AbstractProcess;
+use EasySwoole\Component\WaitGroup;
+use Swoole\Coroutine;
+use Swoole\Coroutine\Channel;
+use Swoole\Process;
+
+class QueueProcess extends AbstractProcess
+{
+    private ?Channel $channel = null;
+    private ?WaitGroup $waitGroup = null;
+    private bool $isShutdown = false;
+
+    protected function run($arg)
+    {
+        $this->channel = new Channel(24);
+        $this->waitGroup = new WaitGroup(2);
+
+        // add() 只登记任务，此时协程尚未启动。
+        $this->waitGroup->add(function () {
+            while (!$this->isShutdown) {
+                // Channel 满时会挂起生产者；关闭 Channel 后 push() 返回 false。
+                if (!$this->channel->push(1, 0.1)) {
+                    break;
+                }
+            }
+        });
+
+        $this->waitGroup->add(function () {
+            while (!$this->isShutdown || !$this->channel->isEmpty()) {
+                $data = $this->channel->pop(0.1);
+                if (
+                    $data === false
+                    && $this->channel->errCode === SWOOLE_CHANNEL_CLOSED
+                ) {
+                    break;
+                }
+
+                // 模拟业务 I/O，同时主动让出调度，让事件循环能够处理 SIGTERM。
+                Coroutine::sleep(0.01);
+            }
+        });
+
+        // 所有任务登记完成后只启动一次。
+        $this->waitGroup->start();
+    }
+
+    protected function onShutDown()
+    {
+        // 先设置停止标记，再关闭 Channel，唤醒可能阻塞在 push()/pop() 的协程。
+        $this->isShutdown = true;
+        $this->channel?->close();
+
+        // 只等待一次，确保工作协程退出后 AbstractProcess 才结束事件循环。
+        if ($this->waitGroup !== null && !$this->waitGroup->wait(3)) {
+            error_log('Timed out waiting for process workers to stop');
+        }
+    }
+}
+
+$worker = new QueueProcess('queue-worker', null);
+$pid = $worker->getProcess()->start();
+
+// 父进程退出时发送 SIGTERM，并负责回收子进程。
+Process::kill($pid, SIGTERM);
+Process::wait(true);
+```
+
+这个场景需要特别注意：
+
+- 生产者和消费者必须全部通过同一个 WaitGroup 登记，并在登记完成后调用一次 `start()`。
+- `onShutDown()` 中只调用一次 `wait()`；不要在其他位置提前等待同一个 WaitGroup。
+- 必须先设置关闭状态，再关闭业务 Channel，最后等待工作协程退出。
+- 关闭 Channel 可以唤醒阻塞中的 `push()` / `pop()`，业务循环还应检查其返回值并及时结束。
+- 如果 Channel 操作持续立即成功，协程可能长时间占用调度器；循环内应存在真实异步 I/O，或使用短暂的 `Coroutine::sleep()` 主动让出调度。
+- `wait()` 超时只表示停止等待，不会强制终止仍在运行的协程。超时应记录日志，并避免继续释放这些协程仍在使用的业务资源。
 
 ### Manager
 

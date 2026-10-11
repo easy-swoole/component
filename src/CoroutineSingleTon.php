@@ -8,13 +8,13 @@ use Swoole\Coroutine;
 
 trait CoroutineSingleTon
 {
-    private static $instance = [];
+    private static array $instance = [];
 
     /**
      * @param mixed ...$args
      * @return static
      */
-    public static function getInstance(...$args)
+    public static function getInstance(...$args): static
     {
         $cid = Coroutine::getCid();
         if(!isset(static::$instance[$cid])){
@@ -31,7 +31,7 @@ trait CoroutineSingleTon
         return static::$instance[$cid];
     }
 
-    function destroy(int|null $cid = null)
+    function destroy(int|null $cid = null):void
     {
         if($cid === null){
             $cid = Coroutine::getCid();

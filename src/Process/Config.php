@@ -82,6 +82,13 @@ class Config extends SplBean
      */
     public function setPipeType(int $pipeType): void
     {
+        if (!in_array($pipeType, [
+            self::PIPE_TYPE_NONE,
+            self::PIPE_TYPE_SOCK_STREAM,
+            self::PIPE_TYPE_SOCK_DGRAM,
+        ], true)) {
+            throw new \InvalidArgumentException("Invalid process pipe type: {$pipeType}");
+        }
         $this->pipeType = $pipeType;
     }
 
@@ -103,6 +110,7 @@ class Config extends SplBean
 
     /**
      * @return int
+     * @deprecated 关闭钩子现在同步执行；该配置仅为兼容旧版本而保留。
      */
     public function getMaxExitWaitTime(): int
     {
@@ -111,9 +119,13 @@ class Config extends SplBean
 
     /**
      * @param int $maxExitWaitTime
+     * @deprecated 关闭钩子现在同步执行；该配置仅为兼容旧版本而保留。
      */
     public function setMaxExitWaitTime(int $maxExitWaitTime): void
     {
+        if ($maxExitWaitTime < 0) {
+            throw new \InvalidArgumentException('maxExitWaitTime must be greater than or equal to 0');
+        }
         $this->maxExitWaitTime = $maxExitWaitTime;
     }
 
@@ -126,9 +138,9 @@ class Config extends SplBean
     }
 
     /**
-     * @param string $processGroup
+     * @param string|null $processGroup
      */
-    public function setProcessGroup(string $processGroup): void
+    public function setProcessGroup(?string $processGroup): void
     {
         $this->processGroup = $processGroup;
     }

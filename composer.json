@@ -23,7 +23,10 @@
     "autoload": {
         "psr-4": {
             "EasySwoole\\Component\\": "src/",
-            "EasySwoole\\Component\\Tests\\": "Tests/"
+            "EasySwoole\\Component\\Tests\\": "tests/"
         }
+    },
+    "scripts": {
+        "test": "phpunit"
     }
 }
