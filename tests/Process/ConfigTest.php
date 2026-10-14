@@ -8,9 +8,36 @@ use EasySwoole\Component\Process\Config;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
+use TypeError;
 
 final class ConfigTest extends TestCase
 {
+    public function testDefaultsAndTypedAccessors(): void
+    {
+        $config = new Config();
+
+        self::assertNull($config->getProcessName());
+        self::assertNull($config->getProcessGroup());
+        self::assertNull($config->getArg());
+        self::assertFalse($config->isRedirectStdinStdout());
+        self::assertSame(Config::PIPE_TYPE_SOCK_DGRAM, $config->getPipeType());
+        self::assertTrue($config->isEnableCoroutine());
+
+        $arg = new stdClass();
+        $config->setProcessName('worker');
+        $config->setProcessGroup('default');
+        $config->setArg($arg);
+        $config->setRedirectStdinStdout(true);
+        $config->setEnableCoroutine(false);
+
+        self::assertSame('worker', $config->getProcessName());
+        self::assertSame('default', $config->getProcessGroup());
+        self::assertSame($arg, $config->getArg());
+        self::assertTrue($config->isRedirectStdinStdout());
+        self::assertFalse($config->isEnableCoroutine());
+    }
+
     public static function validPipeTypes(): array
     {
         return [
@@ -43,5 +70,11 @@ final class ConfigTest extends TestCase
         $config->setProcessGroup(null);
 
         self::assertNull($config->getProcessGroup());
+    }
+
+    public function testProcessNameRejectsNonStringValue(): void
+    {
+        $this->expectException(TypeError::class);
+        (new Config())->setProcessName(123);
     }
 }

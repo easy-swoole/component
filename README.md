@@ -706,6 +706,8 @@ $pid = $tcpProcess->getProcess()->start();
 
 `asyncCallback=true` 时每个连接进入独立协程；关闭时连接串行处理。`onAccept()` 应负责协议解析、超时控制及关闭客户端 Socket。监听地址默认是 `0.0.0.0`，对外暴露服务前应确认网络和鉴权策略。
 
+收到 `SIGTERM` 后，组件会关闭监听 Socket 并结束 `accept()` 循环。协程模式下不会立即强制退出事件循环，而是等待被唤醒的监听协程自然返回，以避免退出时出现 `all coroutines are asleep - deadlock`。正在执行的 `onAccept()` 业务协程仍应自行设置 I/O 超时，避免退出被长期阻塞。
+
 ### AbstractUnixProcess
 
 创建 Unix Domain Socket 服务进程，仅适用于支持 AF_UNIX 的系统。

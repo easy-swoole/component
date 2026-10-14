@@ -8,12 +8,15 @@ use EasySwoole\Component\Process\Config;
 
 class UnixProcessConfig extends Config
 {
-    protected $socketFile;
-    protected $asyncCallback = true;
-    protected $linger = [ 'l_linger' => 0, 'l_onoff' => 0];
+    protected ?string $socketFile = null;
+
+    protected bool $asyncCallback = true;
+
+    /** @var array{l_linger: int, l_onoff: int} */
+    protected array $linger = ['l_linger' => 0, 'l_onoff' => 0];
 
     /**
-     * @return int[]
+     * @return array{l_linger: int, l_onoff: int}
      */
     public function getLinger(): array
     {
@@ -21,40 +24,28 @@ class UnixProcessConfig extends Config
     }
 
     /**
-     * @param int[] $linger
+     * @param array{l_linger: int, l_onoff: int} $linger
      */
     public function setLinger(array $linger): void
     {
         $this->linger = $linger;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getSocketFile()
+    public function getSocketFile(): ?string
     {
         return $this->socketFile;
     }
 
-    /**
-     * @param mixed $socketFile
-     */
-    public function setSocketFile($socketFile): void
+    public function setSocketFile(?string $socketFile): void
     {
         $this->socketFile = $socketFile;
     }
 
-    /**
-     * @return bool
-     */
     public function isAsyncCallback(): bool
     {
         return $this->asyncCallback;
     }
 
-    /**
-     * @param bool $asyncCallback
-     */
     public function setAsyncCallback(bool $asyncCallback): void
     {
         $this->asyncCallback = $asyncCallback;

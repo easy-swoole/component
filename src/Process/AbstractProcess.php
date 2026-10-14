@@ -183,7 +183,11 @@ abstract class AbstractProcess
             $this->heartBeatTimerId = null;
         }
         Process::signal(SIGTERM, null);
-        Event::exit();
+        // 协程模式下需要让 shutdown 唤醒的协程恢复并使 run() 自然返回；
+        // 立即退出事件循环会留下休眠协程，进而产生 deadlock 报错。
+        if (!$this->config->isEnableCoroutine()) {
+            Event::exit();
+        }
     }
 
     /**
@@ -203,12 +207,12 @@ abstract class AbstractProcess
         }
     }
 
-    public function getArg()
+    public function getArg(): mixed
     {
         return $this->config->getArg();
     }
 
-    public function getProcessName()
+    public function getProcessName(): ?string
     {
         return $this->config->getProcessName();
     }

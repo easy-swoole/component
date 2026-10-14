@@ -8,13 +8,17 @@ use EasySwoole\Component\Process\Config;
 
 class TcpProcessConfig extends Config
 {
-    protected $listenAddress = '0.0.0.0';
-    protected $listenPort;
-    protected $asyncCallback = true;
-    protected $linger = [ 'l_linger' => 0, 'l_onoff' => 0];
+    protected string $listenAddress = '0.0.0.0';
+
+    protected ?int $listenPort = null;
+
+    protected bool $asyncCallback = true;
+
+    /** @var array{l_linger: int, l_onoff: int} */
+    protected array $linger = ['l_linger' => 0, 'l_onoff' => 0];
 
     /**
-     * @return int[]
+     * @return array{l_linger: int, l_onoff: int}
      */
     public function getLinger(): array
     {
@@ -22,58 +26,39 @@ class TcpProcessConfig extends Config
     }
 
     /**
-     * @param int[] $linger
+     * @param array{l_linger: int, l_onoff: int} $linger
      */
     public function setLinger(array $linger): void
     {
         $this->linger = $linger;
     }
 
-    /**
-     * @return string
-     */
     public function getListenAddress(): string
     {
         return $this->listenAddress;
     }
 
-    /**
-     * @param string $listenAddress
-     */
     public function setListenAddress(string $listenAddress): void
     {
         $this->listenAddress = $listenAddress;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getListenPort()
+    public function getListenPort(): ?int
     {
         return $this->listenPort;
     }
 
-    /**
-     * @param mixed $listenPort
-     */
-    public function setListenPort($listenPort): void
+    public function setListenPort(?int $listenPort): void
     {
         $this->listenPort = $listenPort;
     }
-    /**
-     * @return bool
-     */
     public function isAsyncCallback(): bool
     {
         return $this->asyncCallback;
     }
 
-    /**
-     * @param bool $asyncCallback
-     */
     public function setAsyncCallback(bool $asyncCallback): void
     {
         $this->asyncCallback = $asyncCallback;
     }
-
 }
