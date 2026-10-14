@@ -11,6 +11,11 @@ use Swoole\Coroutine;
 
 abstract class AbstractUnixProcess extends AbstractProcess
 {
+
+    protected bool $isShutDown = false;
+
+    protected Socket $socketServer;
+
     function __construct(UnixProcessConfig $config)
     {
         $config->setEnableCoroutine(true);
@@ -34,10 +39,11 @@ abstract class AbstractUnixProcess extends AbstractProcess
         if(!$socketServer->listen(2048)){
             throw new Exception(static::class.' listen '.$this->getConfig()->getSocketFile(). ' fail case '.$socketServer->errMsg);
         }
-        while (1){
-            $client = $socketServer->accept(-1);
+        $this->socketServer = $socketServer;
+        while (!$this->isShutDown) {
+            $client = $this->socketServer->accept(0.1);
             if(!$client){
-                return;
+                continue;
             }
             if($this->getConfig()->isAsyncCallback()){
                 Coroutine::create(function ()use($client){
@@ -58,4 +64,10 @@ abstract class AbstractUnixProcess extends AbstractProcess
     }
 
     abstract function onAccept(Socket $socket);
+
+    protected function onShutDown(): void
+    {
+        $this->isShutDown = true;
+        $this->socketServer->shutdown();
+    }
 }
