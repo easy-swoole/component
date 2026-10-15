@@ -203,7 +203,7 @@ Co\run(function () {
 });
 ```
 
-它是进程内协程锁，不是跨进程分布式锁。手动调用 `lock()` 后应在 `finally` 中 `unlock()`，或优先使用 `deferLock()`。
+它是进程内协程锁，不是跨进程分布式锁。同一协程重复调用 `lock()` 会直接返回成功且不增加重入计数，一次 `unlock()` 即完全释放。`unlock()` 只有在当前协程持有指定锁时才返回 `true`；未持有、重复释放或其他协程尝试释放时返回 `false`。手动调用 `lock()` 后应在 `finally` 中 `unlock()`，或优先使用 `deferLock()`。
 
 ### WaitGroup
 
@@ -428,16 +428,19 @@ Co\run(function () {
     $scheduler->addItem('cache');
 
     go(function () use ($scheduler) {
-        $scheduler->ready('database', true);
-        $scheduler->ready('cache', true);
+        $scheduler->ready('database');
+        $scheduler->ready('cache');
     });
 
     $allReady = $scheduler->waitReady(['database', 'cache'], 3.0);
     $anyReady = $scheduler->waitAnyReady(['database', 'cache'], 3.0);
+
+    $scheduler->dropItem('database');
+    $scheduler->dropItem('cache');
 });
 ```
 
-默认的 `ready()` / `unready()` 使用加减计数；传入 `$force = true` 才直接设为 `1` / `0`。等待方法需要协程环境，超时单位为秒。建议先 `addItem()` 再变更或等待状态。
+`ready()` / `unready()` 分别将状态直接设置为 Ready / Unready，并返回底层 Table 是否写入成功。状态变更前必须先通过 `addItem()` 注册 key；对不存在的 key 调用 `ready()`、`unready()` 或 `restore()` 会返回 `false`，且不会自动创建记录。`dropItem()` 用于删除已注册的 key，删除成功返回 `true`，key 不存在或重复删除时返回 `false`。等待方法需要协程环境，超时单位为秒，并使用单调时钟按实际经过时间判断。
 
 ### Timer
 

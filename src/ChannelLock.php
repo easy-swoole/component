@@ -36,7 +36,7 @@ class ChannelLock
     {
         $cid = Coroutine::getCid();
         if(!isset($this->status[$cid][$lockName])){
-            return true;
+            return false;
         }
         if(!isset($this->list[$lockName])){
             $this->list[$lockName] = new Channel(1);
