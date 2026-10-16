@@ -473,7 +473,9 @@ $result = Invoker::exec(function (string $name) {
 }, 500_000, 'EasySwoole');
 ```
 
-超时参数单位为微秒，超时抛出 `RuntimeException('func timeout')`。它需要 `pcntl` 和支持信号的操作系统，不适用于 Windows；也不适合嵌套调用或与其他 `SIGALRM` 用法并存。协程超时建议使用 Swoole 的协程超时机制。
+超时参数为正整数，单位为微秒；超时后抛出 `RuntimeException('func timeout')`。调用结束时会恢复原有的 `SIGALRM` handler 和 `pcntl_async_signals` 设置，业务 callable 自身抛出的异常会继续向上传递。
+
+它需要 `pcntl` 和支持信号的操作系统，不适用于 Windows。`SIGALRM` 和 alarm 是进程级资源，因此不支持嵌套调用，嵌套时会抛出 `LogicException`；也不能与业务已有的 alarm 定时器共存，因为原定时器的剩余时间无法精确恢复。超时属于软超时，在不可中断的扩展调用中可能延迟触发。协程超时建议使用 Swoole 的协程超时机制。
 
 ## 自定义进程
 
