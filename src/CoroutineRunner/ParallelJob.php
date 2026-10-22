@@ -9,9 +9,11 @@ class ParallelJob
 {
     protected Channel $queueJob;
 
-    protected mixed $addTaskCall = null;
+    /** @var callable(): mixed|null */
+    protected mixed $taskProducer = null;
 
-    protected mixed $taskCall = null;
+    /** @var callable(mixed): mixed|null */
+    protected mixed $taskHandler = null;
 
     protected mixed $onException = null;
 
@@ -29,15 +31,17 @@ class ParallelJob
         $this->queueJob = new Channel($maxQueueSize);
     }
 
-    function setAddTask(callable $func):ParallelJob
+    /** 设置生产者；返回 null 表示本次没有任务。 */
+    function setTaskProducer(callable $func):ParallelJob
     {
-        $this->addTaskCall = $func;
+        $this->taskProducer = $func;
         return $this;
     }
 
-    function setOnTask(callable $func):ParallelJob
+    /** 设置消费者，接收生产者返回的非 null 任务值。 */
+    function setTaskHandler(callable $func):ParallelJob
     {
-        $this->taskCall = $func;
+        $this->taskHandler = $func;
         return $this;
     }
 
@@ -53,12 +57,12 @@ class ParallelJob
      */
     function exec(int $coroutineNum = 64, int $maxJobTry = 3):void
     {
-        if(empty($this->addTaskCall)){
-            throw new \Exception('addTaskCall cannot be null');
+        if(empty($this->taskProducer)){
+            throw new \Exception('taskProducer cannot be null');
         }
 
-        if(empty($this->taskCall)){
-            throw new \Exception('taskCall cannot be null');
+        if(empty($this->taskHandler)){
+            throw new \Exception('taskHandler cannot be null');
         }
 
         if($this->isFinish){
@@ -69,7 +73,7 @@ class ParallelJob
         $this->jobCallEmpty = false;
         $this->interrupt = false;
 
-        //单携程pop任务
+        // 单协程从生产者获取任务
         Coroutine::create(function ()use($maxJobTry){
             $trys = 0;
             while (!$this->isFinish){
@@ -78,8 +82,8 @@ class ParallelJob
                     continue;
                 }
                 try {
-                    $job = call_user_func($this->addTaskCall);
-                    if($job){
+                    $job = call_user_func($this->taskProducer);
+                    if($job !== null){
                         $trys = 0;
                         $this->queueJob->push($job,-1);
                     }else{
@@ -117,9 +121,9 @@ class ParallelJob
             Coroutine::create(function (){
                 while (!$this->isFinish) {
                     $task = $this->queueJob->pop($this->jobWaitTime);
-                    if(!empty($task)){
+                    if($this->queueJob->errCode === 0){
                         try {
-                            call_user_func($this->taskCall, $task);
+                            call_user_func($this->taskHandler, $task);
                         }catch (\Throwable $exception){
                             if($this->onException){
                                 call_user_func($this->onException,$exception,$task);

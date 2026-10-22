@@ -310,10 +310,10 @@ Co\run(function () {
     $jobs->enqueue(['id' => 2]);
 
     $parallel = new ParallelJob(128);
-    $parallel->setAddTask(function () use ($jobs) {
+    $parallel->setTaskProducer(function () use ($jobs) {
         return $jobs->isEmpty() ? null : $jobs->dequeue();
     });
-    $parallel->setOnTask(function (array $job) {
+    $parallel->setTaskHandler(function (array $job) {
         echo "handle {$job['id']}" . PHP_EOL;
     });
     $parallel->setOnException(function (Throwable $throwable, $job = null) {
@@ -328,7 +328,7 @@ Co\run(function () {
 });
 ```
 
-`setAddTask()` 连续返回空值达到 `maxJobTry` 后，组件认为没有更多任务，因此合法任务值应为 truthy。`exec()` 异步启动，`sync()` 等待完成。`interrupt()` 只停止调度，不保证正在执行的 callable 被立即取消；中断后可用 `flushJobQueue()` 清空剩余队列。
+`setTaskProducer()` 设置获取下一项任务的生产者，`setTaskHandler()` 设置处理任务的消费者。生产者返回 `null` 表示本次没有任务；连续返回 `null` 达到 `maxJobTry` 后，组件停止生产。`0`、`false`、空字符串和空数组均为合法任务，会原样传给消费者。`exec()` 异步启动，`sync()` 等待完成。`interrupt()` 只停止调度，不保证正在执行的 callable 被立即取消；中断后可用 `flushJobQueue()` 清空剩余队列。
 
 ## 共享数据与调度
 
