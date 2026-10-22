@@ -14,9 +14,9 @@ use Swoole\Coroutine\Channel;
 class ChannelManger
 {
     use Singleton;
-    private $list = [];
+    private array $list = [];
 
-    function add($name,$size = 1024):void
+    function add(int|string $name,int $size = 1024):void
     {
         if(!isset($this->list[$name])){
             $chan = new Channel($size);
@@ -24,7 +24,7 @@ class ChannelManger
         }
     }
 
-    function get($name):?Channel
+    function get(int|string $name):?Channel
     {
         if(isset($this->list[$name])){
             return $this->list[$name];

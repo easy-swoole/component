@@ -17,10 +17,10 @@ class AtomicManager
 {
     use Singleton;
 
-    private $list = [];
-    private $listForLong = [];
+    private array $list = [];
+    private array $listForLong = [];
 
-    function add($name,int $int = 0):void
+    function add(int|string $name,int $int = 0):void
     {
         if(!isset($this->list[$name])){
             $a = new Atomic($int);
@@ -28,7 +28,7 @@ class AtomicManager
         }
     }
 
-    function addLong($name,int $int = 0)
+    function addLong(int|string $name,int $int = 0):void
     {
         if(!isset($this->listForLong[$name])){
             $a = new Long($int);
@@ -36,7 +36,7 @@ class AtomicManager
         }
     }
 
-    function getLong($name):?Long
+    function getLong(int|string $name):?Long
     {
         if(isset($this->listForLong[$name])){
             return $this->listForLong[$name];
@@ -45,7 +45,7 @@ class AtomicManager
         }
     }
 
-    function get($name):?Atomic
+    function get(int|string $name):?Atomic
     {
         if(isset($this->list[$name])){
             return $this->list[$name];

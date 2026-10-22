@@ -9,15 +9,16 @@ use Swoole\Coroutine;
 
 class Runner
 {
-    protected $concurrency;
-    protected $taskChannel;
-    protected $isRunning = false;
-    protected $runningNum = 0;
-    protected $onException;
+    protected int $concurrency;
+    protected Channel $taskChannel;
+    protected bool $isRunning = false;
+    protected int $runningNum = 0;
     /** @var callable|null */
-    protected $onLoop;
+    protected mixed $onException = null;
+    /** @var callable|null */
+    protected mixed $onLoop = null;
 
-    function __construct($concurrency = 64,$taskChannelSize = 1024)
+    function __construct(int $concurrency = 64,int $taskChannelSize = 1024)
     {
         $this->concurrency = $concurrency;
         $this->taskChannel = new Channel($taskChannelSize);
@@ -56,7 +57,7 @@ class Runner
         return $this->taskChannel->length();
     }
 
-    function start(float $waitTime = 30)
+    function start(float $waitTime = 30):void
     {
         if(!$this->isRunning){
             $this->isRunning = true;

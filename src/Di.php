@@ -13,11 +13,12 @@ class Di
 {
     use Singleton;
 
-    private $container = [];
-    private $onKeyMiss = null;
-    private $alias = [];
+    private array $container = [];
+    /** @var callable|null */
+    private mixed $onKeyMiss = null;
+    private array $alias = [];
 
-    public function alias($alias,$key): Di
+    public function alias(int|string $alias,int|string $key): Di
     {
         if(!array_key_exists($alias,$this->container)){
             $this->alias[$alias] = $key;
@@ -33,13 +34,13 @@ class Di
         return $this;
     }
 
-    public function deleteAlias($alias): Di
+    public function deleteAlias(int|string $alias): Di
     {
         unset($this->alias[$alias]);
         return $this;
     }
 
-    public function set($key, $obj,...$arg):void
+    public function set(int|string $key, mixed $obj,mixed ...$arg):void
     {
         /*
          * 注入的时候不做任何的类型检测与转换
@@ -51,7 +52,7 @@ class Di
         ];
     }
 
-    function delete($key):Di
+    function delete(int|string $key):Di
     {
         unset($this->container[$key]);
         return $this;
@@ -68,7 +69,7 @@ class Di
      * @return null
      * @throws \Throwable
      */
-    function get($key)
+    function get(int|string $key):mixed
     {
         if(isset($this->alias[$key])){
             $key = $this->alias[$key];

@@ -9,17 +9,17 @@ use Swoole\Coroutine;
 
 class Csp
 {
-    private $chan;
-    private $count = 0;
-    private $success = 0;
-    private $task = [];
+    private Channel $chan;
+    private int $count = 0;
+    private int $success = 0;
+    private array $task = [];
 
     function __construct(int $size = 64)
     {
         $this->chan = new Channel($size);
     }
 
-    function add($itemName,callable $call):Csp
+    function add(int|string $itemName,callable $call):Csp
     {
         $this->count = 0;
         $this->success = 0;
@@ -32,7 +32,7 @@ class Csp
         return $this->success;
     }
 
-    function exec(?float $timeout = 5)
+    function exec(?float $timeout = 5):array
     {
         if($timeout <= 0){
             $timeout = PHP_INT_MAX;

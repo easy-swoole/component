@@ -15,7 +15,7 @@ class Timer
 
     protected array $timerMap = [];
 
-    function loop(int $ms, callable $callback, $name = null, ...$params): int
+    function loop(int $ms, callable $callback, int|string|null $name = null, mixed ...$params): int
     {
         $id = SWTimer::tick($ms, $callback, ...$params);
         if ($name !== null) {
@@ -24,7 +24,7 @@ class Timer
         return $id;
     }
 
-    function clear($timerIdOrName): bool
+    function clear(int|string $timerIdOrName): bool
     {
         $tid = null;
         if(is_numeric($timerIdOrName)){
@@ -47,7 +47,7 @@ class Timer
         return true;
     }
 
-    function after(int $ms, callable $callback, ...$params): int
+    function after(int $ms, callable $callback, mixed ...$params): int
     {
         return SWTimer::after($ms, $callback, ...$params);
     }

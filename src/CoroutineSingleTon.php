@@ -14,7 +14,7 @@ trait CoroutineSingleTon
      * @param mixed ...$args
      * @return static
      */
-    public static function getInstance(...$args): static
+    public static function getInstance(mixed ...$args): static
     {
         $cid = Coroutine::getCid();
         if(!isset(static::$instance[$cid])){

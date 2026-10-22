@@ -6,17 +6,17 @@ namespace EasySwoole\Component\CoroutineRunner;
 
 class Task
 {
-    protected $timeout = 3;
+    protected int $timeout = 3;
     /** @var callable */
-    protected $call;
-    /** @var callable */
-    protected $onSuccess;
-    /** @var callable */
-    protected $onFail;
-    /** @var float */
-    protected $startTime;
+    protected mixed $call;
+    /** @var callable|null */
+    protected mixed $onSuccess = null;
+    /** @var callable|null */
+    protected mixed $onFail = null;
+    /** @var float|null */
+    protected ?float $startTime = null;
 
-    protected $result;
+    protected mixed $result = null;
 
     function __construct(callable $call)
     {
@@ -88,9 +88,9 @@ class Task
     }
 
     /**
-     * @return float
+     * @return float|null
      */
-    public function getStartTime(): float
+    public function getStartTime(): ?float
     {
         return $this->startTime;
     }
@@ -106,7 +106,7 @@ class Task
     /**
      * @return mixed
      */
-    public function getResult()
+    public function getResult():mixed
     {
         return $this->result;
     }
@@ -114,7 +114,7 @@ class Task
     /**
      * @param mixed $result
      */
-    public function setResult($result): void
+    public function setResult(mixed $result): void
     {
         $this->result = $result;
     }

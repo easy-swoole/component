@@ -13,8 +13,8 @@ class Manager
     use Singleton;
 
     /** @var AbstractProcess[] $processList */
-    protected $processList = [];
-    protected $table;
+    protected array $processList = [];
+    protected Table $table;
 
 
     public function __construct()
@@ -37,7 +37,7 @@ class Manager
         return $this->table;
     }
 
-    public function kill($pidOrGroupName, $sig = SIGTERM): array
+    public function kill(int|string $pidOrGroupName, int $sig = SIGTERM): array
     {
         $list = [];
         if (is_numeric($pidOrGroupName)) {
@@ -59,7 +59,7 @@ class Manager
         return $list;
     }
 
-    public function info($pidOrGroupName = null)
+    public function info(int|string|null $pidOrGroupName = null):array
     {
         $list = [];
         if ($pidOrGroupName == null) {
@@ -94,19 +94,19 @@ class Manager
         return $this;
     }
 
-    public function attachToServer(Server $server)
+    public function attachToServer(Server $server):void
     {
         foreach ($this->processList as $process) {
             $server->addProcess($process->getProcess());
         }
     }
 
-    public function pidExist(int $pid)
+    public function pidExist(int $pid):bool
     {
         return Process::kill($pid, 0);
     }
 
-    protected function clearPid(array $list)
+    protected function clearPid(array $list):array
     {
         foreach ($list as $pid => $value) {
             if (!$this->pidExist($pid)) {

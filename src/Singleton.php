@@ -11,13 +11,13 @@ namespace EasySwoole\Component;
 
 trait Singleton
 {
-    private static $instance;
+    private static ?self $instance = null;
 
     /**
      * @param mixed ...$args
      * @return static
      */
-    static function getInstance(...$args)
+    static function getInstance(mixed ...$args):static
     {
         if(!isset(static::$instance)){
             static::$instance = new static(...$args);

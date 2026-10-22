@@ -12,7 +12,7 @@ namespace EasySwoole\Component;
 
 class MultiEvent extends MultiContainer
 {
-    function set($key, $item)
+    function set(int|string $key, mixed $item):static|bool
     {
         if(is_callable($item)){
             return parent::set($key, $item);
@@ -21,7 +21,7 @@ class MultiEvent extends MultiContainer
         }
     }
 
-    function add($key, $item)
+    function add(int|string $key, mixed $item):static|bool
     {
         if(is_callable($item)){
             return parent::add($key, $item);
@@ -36,7 +36,7 @@ class MultiEvent extends MultiContainer
      * @return array
      * @throws \Throwable
      */
-    public function hook($event, ...$args):array
+    public function hook(int|string $event, mixed ...$args):array
     {
         $res = [];
         $calls = $this->get($event);

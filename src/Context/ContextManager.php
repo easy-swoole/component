@@ -21,7 +21,7 @@ class ContextManager
     private array $deferList = [];
 
 
-    public function set($key,$value,int|null $cid = null):ContextManager
+    public function set(int|string $key,mixed $value,int|null $cid = null):ContextManager
     {
         if($cid == null){
             $cid = $this->getCid();
@@ -30,7 +30,7 @@ class ContextManager
         return $this;
     }
 
-    public function get($key,int|null $cid = null):mixed
+    public function get(int|string $key,int|null $cid = null):mixed
     {
         if($cid == null){
             $cid = $this->getCid();
@@ -41,7 +41,7 @@ class ContextManager
         return null;
     }
 
-    public function unset($key,int|null $cid = null):bool
+    public function unset(int|string $key,int|null $cid = null):bool
     {
         if($cid == null){
             $cid = $this->getCid();

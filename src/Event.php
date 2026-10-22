@@ -10,7 +10,7 @@ namespace EasySwoole\Component;
 
 class Event extends Container
 {
-    function set($key, $item)
+    function set(int|string $key, mixed $item):static|bool
     {
         if(is_callable($item)){
             return parent::set($key, $item);
@@ -25,7 +25,7 @@ class Event extends Container
      * @return mixed|null
      * @throws \Throwable
      */
-    public function hook($event, ...$args)
+    public function hook(int|string $event, mixed ...$args):mixed
     {
         $call = $this->get($event);
         if(is_callable($call)){
