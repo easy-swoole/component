@@ -199,11 +199,13 @@ abstract class AbstractProcess
             return;
         }
         $this->shutdownStarted = true;
-        $table->del((string)$process->pid);
         try {
             $this->onShutDown();
         } catch (\Throwable $throwable) {
-            $this->onException($throwable, 'shutdown', $process);
+            $this->onException($throwable);
+        } finally {
+            Timer::getInstance()->clearAll();
+            $table->del((string) $process->pid);
         }
     }
 
