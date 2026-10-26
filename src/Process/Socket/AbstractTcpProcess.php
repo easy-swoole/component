@@ -17,9 +17,11 @@ abstract class AbstractTcpProcess extends AbstractProcess
 
     function __construct(TcpProcessConfig $config)
     {
-        $config->setEnableCoroutine(true);
         if(empty($config->getListenPort())){
             throw new Exception("listen port empty at class ".static::class);
+        }
+        if(!$config->isEnableCoroutine()){
+            $config->setAsyncCallback(false);
         }
         parent::__construct($config);
     }
